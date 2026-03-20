@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fumoku — Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --paper: #f5f0e8;
+    --paper-dark: #e8e0d0;
+    --ink: #2c2416;
+    --ink-light: #6b5d4d;
+    --ink-faint: #b0a18e;
+    --accent: #c4533a;
+    --accent-light: #e8a090;
+    --green: #5a7a5a;
+    --green-light: #a8c4a0;
+    --shadow: rgba(44, 36, 22, 0.08);
+    --card-w: min(480px, 88vw);
+    --card-h: min(320px, 56vw);
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Paper texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Faint ruled lines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 31px,
+      rgba(176, 161, 142, 0.12) 31px,
+      rgba(176, 161, 142, 0.12) 32px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    width: 100%;
+    max-width: 600px;
+    padding: 2.5rem 1.5rem 1rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.75rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .logo .jp {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.85rem;
+    color: var(--ink-light);
+    letter-spacing: 0.08em;
+  }
+
+  .deck-controls {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink-light);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+  }
+
+  .btn-icon:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+    background: var(--paper-dark);
+  }
+
+  /* ── Progress ── */
+  .progress-area {
+    width: 100%;
+    max-width: 600px;
+    padding: 0 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 3px;
+    background: var(--paper-dark);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .progress-text {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── Card Area ── */
+  .card-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+  }
+
+  .card-container {
+    perspective: 1200px;
+    width: var(--card-w);
+    height: var(--card-h);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .card-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .card-container.flipped .card-inner {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 2.5rem;
+    text-align: center;
+    border: 1.5px solid var(--ink-faint);
+    background: var(--paper);
+    box-shadow:
+      0 1px 2px var(--shadow),
+      0 4px 12px var(--shadow),
+      inset 0 0 0 1px rgba(255,255,255,0.5);
+  }
+
+  /* Subtle corner ornaments */
+  .card-face::before,
+  .card-face::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-color: var(--ink-faint);
+    border-style: solid;
+    opacity: 0.4;
+  }
+
+  .card-face::before {
+    top: 12px; left: 12px;
+    border-width: 1px 0 0 1px;
+  }
+
+  .card-face::after {
+    bottom: 12px; right: 12px;
+    border-width: 0 1px 1px 0;
+  }
+
+  .card-back {
+    transform: rotateY(180deg);
+    background: #faf7f2;
+  }
+
+  .card-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-faint);
+    margin-bottom: 1.25rem;
+    font-weight: 500;
+  }
+
+  .card-content {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(1.2rem, 3.5vw, 1.75rem);
+    line-height: 1.45;
+    color: var(--ink);
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  .card-back .card-content {
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(0.85rem, 2.2vw, 1rem);
+    line-height: 1.7;
+    color: var(--ink-light);
+  }
+
+  .card-hint {
+    position: absolute;
+    bottom: 14px;
+    font-size: 0.6rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Navigation ── */
+  .nav-area {
+    width: 100%;
+    max-width: 600px;
+    padding: 0 1.5rem 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .btn-action {
+    height: 44px;
+    padding: 0 1.5rem;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: 24px;
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-light);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .btn-action:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+    background: var(--paper-dark);
+  }
+
+  .btn-action.btn-know {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .btn-action.btn-know:hover {
+    background: var(--green);
+    color: var(--paper);
+  }
+
+  .btn-action.btn-again {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-action.btn-again:hover {
+    background: var(--accent);
+    color: var(--paper);
+  }
+
+  .card-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .btn-nav {
+    background: none;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    cursor: pointer;
+    padding: 0.5rem;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .btn-nav:hover { color: var(--ink); }
+  .btn-nav:disabled { opacity: 0.3; cursor: default; }
+  .btn-nav:disabled:hover { color: var(--ink-faint); }
+
+  .card-counter {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Modal (Add/Edit) ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 36, 22, 0.3);
+    backdrop-filter: blur(4px);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--paper);
+    border: 1.5px solid var(--ink-faint);
+    border-radius: 8px;
+    padding: 2rem;
+    width: min(500px, 92vw);
+    max-height: 85vh;
+    overflow-y: auto;
+    transform: translateY(12px);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 12px 40px rgba(44, 36, 22, 0.15);
+  }
+
+  .modal-overlay.active .modal {
+    transform: translateY(0);
+  }
+
+  .modal h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.35rem;
+    margin-bottom: 1.5rem;
+    font-weight: 400;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-light);
+    margin-bottom: 0.4rem;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.65rem 0.8rem;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: 4px;
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: var(--ink);
+  }
+
+  .form-group textarea {
+    min-height: 80px;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .btn-modal {
+    padding: 0.55rem 1.25rem;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: 4px;
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-modal:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .btn-modal.primary {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .btn-modal.primary:hover {
+    background: var(--ink-light);
+  }
+
+  /* ── Deck Selector ── */
+  .deck-list {
+    list-style: none;
+    margin-bottom: 1rem;
+  }
+
+  .deck-item {
+    padding: 0.75rem 0.8rem;
+    border-bottom: 1px solid var(--paper-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 3px;
+  }
+
+  .deck-item:hover {
+    background: var(--paper-dark);
+  }
+
+  .deck-item.active {
+    background: var(--paper-dark);
+    border-left: 3px solid var(--accent);
+  }
+
+  .deck-item-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1rem;
+  }
+
+  .deck-item-count {
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+  }
+
+  .deck-item-actions {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .deck-item-actions button {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    padding: 0.2rem;
+    font-size: 0.8rem;
+    transition: color 0.15s;
+  }
+
+  .deck-item-actions button:hover {
+    color: var(--accent);
+  }
+
+  /* ── Empty State ── */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+  }
+
+  .empty-state .icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+  }
+
+  .empty-state p {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  /* ── Complete State ── */
+  .complete-state {
+    text-align: center;
+  }
+
+  .complete-state h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 400;
+  }
+
+  .complete-state p {
+    color: var(--ink-light);
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 1.5rem 0;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2rem;
+    color: var(--ink);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-faint);
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-container {
+    animation: fadeInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .card-container.slide-left {
+    animation: slideLeft 0.35s ease both;
+  }
+
+  .card-container.slide-right {
+    animation: slideRight 0.35s ease both;
+  }
+
+  @keyframes slideLeft {
+    to { opacity: 0; transform: translateX(-60px) rotate(-2deg); }
+  }
+
+  @keyframes slideRight {
+    to { opacity: 0; transform: translateX(60px) rotate(2deg); }
+  }
+
+  /* ── Keyboard hints ── */
+  .keyboard-hints {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1.25rem;
+    font-size: 0.6rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    z-index: 1;
+  }
+
+  .keyboard-hints span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border: 1px solid var(--ink-faint);
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    background: var(--paper-dark);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    header { padding: 1.5rem 1rem 0.75rem; }
+    .progress-area, .nav-area { padding-left: 1rem; padding-right: 1rem; }
+    .keyboard-hints { display: none; }
+    .card-actions { gap: 0.6rem; }
+    .btn-action { padding: 0 1rem; font-size: 0.65rem; height: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    Fumoku <span class="jp">札</span>
+  </div>
+  <div class="deck-controls">
+    <button class="btn-icon" id="btnDecks" title="Decks">&#9776;</button>
+    <button class="btn-icon" id="btnAdd" title="Add card">+</button>
+  </div>
+</header>
+
+<div class="progress-area">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text">
+    <span id="deckName">Sample Deck</span>
+    <span id="progressLabel">0 / 0</span>
+  </div>
+</div>
+
+<div class="card-area" id="cardArea">
+  <!-- Card or empty state rendered by JS -->
+</div>
+
+<div class="nav-area" id="navArea">
+  <div class="card-actions" id="cardActions" style="display:none;">
+    <button class="btn-action btn-again" id="btnAgain">&#x21bb; Again</button>
+    <button class="btn-action btn-know" id="btnKnow">&#x2713; Got it</button>
+  </div>
+  <div class="card-nav">
+    <button class="btn-nav" id="btnPrev" disabled>&#8592; prev</button>
+    <span class="card-counter" id="cardCounter"></span>
+    <button class="btn-nav" id="btnNext">next &#8594;</button>
+  </div>
+</div>
+
+<div class="keyboard-hints" id="keyboardHints">
+  <span><kbd>Space</kbd> flip</span>
+  <span><kbd>&#8592;</kbd> prev</span>
+  <span><kbd>&#8594;</kbd> next</span>
+  <span><kbd>1</kbd> again</span>
+  <span><kbd>2</kbd> got it</span>
+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="modalAdd">
+  <div class="modal">
+    <h2 id="modalAddTitle">Add a Card</h2>
+    <div class="form-group">
+      <label for="inputFront">Front</label>
+      <input type="text" id="inputFront" placeholder="Question or term...">
+    </div>
+    <div class="form-group">
+      <label for="inputBack">Back</label>
+      <textarea id="inputBack" placeholder="Answer or definition..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal" id="btnCancelAdd">Cancel</button>
+      <button class="btn-modal primary" id="btnSaveCard">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalDecks">
+  <div class="modal">
+    <h2>Your Decks</h2>
+    <ul class="deck-list" id="deckList"></ul>
+    <div class="form-group" style="margin-top:0.5rem;">
+      <label for="inputDeckName">New Deck</label>
+      <div style="display:flex;gap:0.5rem;">
+        <input type="text" id="inputDeckName" placeholder="Deck name...">
+        <button class="btn-modal primary" id="btnCreateDeck">Create</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal" id="btnCloseDecks">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data Layer (localStorage) ──
+const STORAGE_KEY = 'fumoku_data';
+
+const SAMPLE_CARDS = [
+  { id: 1, front: "What does 'ephemeral' mean?", back: "Lasting for a very short time.\n\nFrom Greek ephēmeros — 'lasting only a day'.", known: false },
+  { id: 2, front: "Pythagorean theorem", back: "a² + b² = c²\n\nIn a right triangle, the square of the hypotenuse equals the sum of the squares of the other two sides.", known: false },
+  { id: 3, front: "What is the speed of light?", back: "299,792,458 m/s\n\nOften approximated as 3 × 10⁸ m/s.", known: false },
+  { id: 4, front: "Mitochondria", back: "The powerhouse of the cell.\n\nGenerates most of the cell's supply of ATP through oxidative phosphorylation.", known: false },
+  { id: 5, front: "What year did the Berlin Wall fall?", back: "1989\n\nNovember 9th. It marked the beginning of German reunification.", known: false },
+];
+
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) return JSON.parse(raw);
+  const initial = {
+    currentDeck: 'sample',
+    decks: {
+      sample: { name: 'Sample Deck', cards: SAMPLE_CARDS }
+    }
+  };
+  saveData(initial);
+  return initial;
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// ── App State ──
+let data = loadData();
+let currentIndex = 0;
+let isFlipped = false;
+let editingCardId = null;
+let sessionStats = { known: 0, again: 0 };
+
+function currentDeck() {
+  return data.decks[data.currentDeck] || { name: 'Empty', cards: [] };
+}
+
+function cards() {
+  return currentDeck().cards;
+}
+
+// ── Rendering ──
+const cardArea = document.getElementById('cardArea');
+const cardActions = document.getElementById('cardActions');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const deckNameEl = document.getElementById('deckName');
+const cardCounter = document.getElementById('cardCounter');
+const btnPrev = document.getElementById('btnPrev');
+const btnNext = document.getElementById('btnNext');
+
+function render() {
+  const deck = currentDeck();
+  const c = cards();
+  deckNameEl.textContent = deck.name;
+
+  const knownCount = c.filter(x => x.known).length;
+  const pct = c.length > 0 ? (knownCount / c.length) * 100 : 0;
+  progressFill.style.width = pct + '%';
+  progressLabel.textContent = `${knownCount} / ${c.length}`;
+
+  if (c.length === 0) {
+    renderEmpty();
+    return;
+  }
+
+  // Check if all done
+  const remaining = c.filter(x => !x.known);
+  if (remaining.length === 0) {
+    renderComplete();
+    return;
+  }
+
+  if (currentIndex >= c.length) currentIndex = c.length - 1;
+  if (currentIndex < 0) currentIndex = 0;
+
+  renderCard(c[currentIndex]);
+
+  btnPrev.disabled = currentIndex === 0;
+  btnNext.disabled = currentIndex === c.length - 1;
+  cardCounter.textContent = `${currentIndex + 1} / ${c.length}`;
+  document.getElementById('navArea').style.display = '';
+  document.getElementById('keyboardHints').style.display = '';
+}
+
+function renderCard(card) {
+  isFlipped = false;
+  const frontText = escapeHtml(card.front);
+  const backText = escapeHtml(card.back).replace(/\n/g, '<br>');
+
+  cardArea.innerHTML = `
+    <div class="card-container" id="cardContainer" onclick="flipCard()">
+      <div class="card-inner">
+        <div class="card-face card-front">
+          <div class="card-label">Question</div>
+          <div class="card-content">${frontText}</div>
+          <div class="card-hint">tap to reveal</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-label">Answer</div>
+          <div class="card-content">${backText}</div>
+          <div class="card-hint">tap to flip back</div>
+        </div>
+      </div>
+    </div>
+  `;
+  cardActions.style.display = 'none';
+}
+
+function renderEmpty() {
+  cardArea.innerHTML = `
+    <div class="empty-state">
+      <div class="icon">&#9744;</div>
+      <p>This deck has no cards yet.<br>Add your first card to get started.</p>
+      <button class="btn-action" onclick="openAddModal()" style="margin:0 auto;">+ Add Card</button>
+    </div>
+  `;
+  cardActions.style.display = 'none';
+  document.getElementById('navArea').style.display = 'none';
+  document.getElementById('keyboardHints').style.display = 'none';
+}
+
+function renderComplete() {
+  const c = cards();
+  cardArea.innerHTML = `
+    <div class="complete-state">
+      <h2>Session Complete</h2>
+      <p>You've reviewed all cards in this deck.</p>
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-num" style="color:var(--green)">${sessionStats.known}</span>
+          <span class="stat-label">Got it</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" style="color:var(--accent)">${sessionStats.again}</span>
+          <span class="stat-label">Again</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">${c.length}</span>
+          <span class="stat-label">Total</span>
+        </div>
+      </div>
+      <button class="btn-action" onclick="resetDeck()" style="margin:0 auto;">&#x21bb; Study Again</button>
+    </div>
+  `;
+  cardActions.style.display = 'none';
+  document.getElementById('navArea').style.display = 'none';
+  document.getElementById('keyboardHints').style.display = 'none';
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ── Card Interactions ──
+function flipCard() {
+  const container = document.getElementById('cardContainer');
+  if (!container) return;
+  isFlipped = !isFlipped;
+  container.classList.toggle('flipped', isFlipped);
+  cardActions.style.display = isFlipped ? 'flex' : 'none';
+}
+
+function markKnown() {
+  const c = cards();
+  if (c.length === 0) return;
+  c[currentIndex].known = true;
+  sessionStats.known++;
+  saveData(data);
+  slideAndAdvance('left');
+}
+
+function markAgain() {
+  const c = cards();
+  if (c.length === 0) return;
+  c[currentIndex].known = false;
+  sessionStats.again++;
+  slideAndAdvance('right');
+}
+
+function slideAndAdvance(dir) {
+  const container = document.getElementById('cardContainer');
+  if (!container) return;
+  container.classList.add(dir === 'left' ? 'slide-left' : 'slide-right');
+  setTimeout(() => {
+    // Move to next unknown card
+    const c = cards();
+    let next = currentIndex;
+    for (let i = 1; i <= c.length; i++) {
+      const idx = (currentIndex + i) % c.length;
+      if (!c[idx].known) { next = idx; break; }
+    }
+    currentIndex = next;
+    render();
+  }, 300);
+}
+
+function goNext() {
+  const c = cards();
+  if (currentIndex < c.length - 1) {
+    currentIndex++;
+    render();
+  }
+}
+
+function goPrev() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    render();
+  }
+}
+
+function resetDeck() {
+  cards().forEach(c => c.known = false);
+  sessionStats = { known: 0, again: 0 };
+  currentIndex = 0;
+  saveData(data);
+  render();
+}
+
+// ── Modals ──
+const modalAdd = document.getElementById('modalAdd');
+const modalDecks = document.getElementById('modalDecks');
+
+function openAddModal() {
+  editingCardId = null;
+  document.getElementById('modalAddTitle').textContent = 'Add a Card';
+  document.getElementById('inputFront').value = '';
+  document.getElementById('inputBack').value = '';
+  modalAdd.classList.add('active');
+  setTimeout(() => document.getElementById('inputFront').focus(), 100);
+}
+
+function openEditModal(card) {
+  editingCardId = card.id;
+  document.getElementById('modalAddTitle').textContent = 'Edit Card';
+  document.getElementById('inputFront').value = card.front;
+  document.getElementById('inputBack').value = card.back;
+  modalAdd.classList.add('active');
+  setTimeout(() => document.getElementById('inputFront').focus(), 100);
+}
+
+function closeAddModal() {
+  modalAdd.classList.remove('active');
+  editingCardId = null;
+}
+
+function saveCard() {
+  const front = document.getElementById('inputFront').value.trim();
+  const back = document.getElementById('inputBack').value.trim();
+  if (!front || !back) return;
+
+  const c = cards();
+  if (editingCardId) {
+    const card = c.find(x => x.id === editingCardId);
+    if (card) { card.front = front; card.back = back; }
+  } else {
+    const maxId = c.reduce((m, x) => Math.max(m, x.id), 0);
+    c.push({ id: maxId + 1, front, back, known: false });
+  }
+
+  saveData(data);
+  closeAddModal();
+  render();
+}
+
+function openDecksModal() {
+  renderDeckList();
+  modalDecks.classList.add('active');
+}
+
+function closeDecksModal() {
+  modalDecks.classList.remove('active');
+}
+
+function renderDeckList() {
+  const list = document.getElementById('deckList');
+  list.innerHTML = '';
+  for (const [key, deck] of Object.entries(data.decks)) {
+    const li = document.createElement('li');
+    li.className = 'deck-item' + (key === data.currentDeck ? ' active' : '');
+    li.innerHTML = `
+      <span>
+        <span class="deck-item-name">${escapeHtml(deck.name)}</span>
+        <span class="deck-item-count">${deck.cards.length} cards</span>
+      </span>
+      <span class="deck-item-actions">
+        <button onclick="event.stopPropagation(); deleteDeck('${key}')" title="Delete">&times;</button>
+      </span>
+    `;
+    li.addEventListener('click', () => selectDeck(key));
+    list.appendChild(li);
+  }
+}
+
+function selectDeck(key) {
+  data.currentDeck = key;
+  currentIndex = 0;
+  sessionStats = { known: 0, again: 0 };
+  saveData(data);
+  closeDecksModal();
+  render();
+}
+
+function createDeck() {
+  const input = document.getElementById('inputDeckName');
+  const name = input.value.trim();
+  if (!name) return;
+  const key = name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
+  data.decks[key] = { name, cards: [] };
+  saveData(data);
+  input.value = '';
+  renderDeckList();
+}
+
+function deleteDeck(key) {
+  if (Object.keys(data.decks).length <= 1) return;
+  delete data.decks[key];
+  if (data.currentDeck === key) {
+    data.currentDeck = Object.keys(data.decks)[0];
+    currentIndex = 0;
+  }
+  saveData(data);
+  renderDeckList();
+  render();
+}
+
+// ── Event Listeners ──
+document.getElementById('btnAdd').addEventListener('click', openAddModal);
+document.getElementById('btnDecks').addEventListener('click', openDecksModal);
+document.getElementById('btnCancelAdd').addEventListener('click', closeAddModal);
+document.getElementById('btnSaveCard').addEventListener('click', saveCard);
+document.getElementById('btnCloseDecks').addEventListener('click', closeDecksModal);
+document.getElementById('btnCreateDeck').addEventListener('click', createDeck);
+document.getElementById('btnKnow').addEventListener('click', markKnown);
+document.getElementById('btnAgain').addEventListener('click', markAgain);
+document.getElementById('btnPrev').addEventListener('click', goPrev);
+document.getElementById('btnNext').addEventListener('click', goNext);
+
+// Close modals on overlay click
+modalAdd.addEventListener('click', e => { if (e.target === modalAdd) closeAddModal(); });
+modalDecks.addEventListener('click', e => { if (e.target === modalDecks) closeDecksModal(); });
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (modalAdd.classList.contains('active') || modalDecks.classList.contains('active')) {
+    if (e.key === 'Escape') { closeAddModal(); closeDecksModal(); }
+    if (e.key === 'Enter' && modalAdd.classList.contains('active') && e.target.tagName !== 'TEXTAREA') {
+      saveCard();
+    }
+    return;
+  }
+
+  switch (e.key) {
+    case ' ':
+    case 'Enter':
+      e.preventDefault();
+      flipCard();
+      break;
+    case 'ArrowLeft':
+      goPrev();
+      break;
+    case 'ArrowRight':
+      goNext();
+      break;
+    case '1':
+      if (isFlipped) markAgain();
+      break;
+    case '2':
+      if (isFlipped) markKnown();
+      break;
+  }
+});
+
+// Double-click card to edit
+cardArea.addEventListener('dblclick', () => {
+  const c = cards();
+  if (c.length > 0 && c[currentIndex]) {
+    openEditModal(c[currentIndex]);
+  }
+});
+
+// Enter key in deck name input
+document.getElementById('inputDeckName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') createDeck();
+});
+
+// ── Init ──
+render();
+</script>
+
+</body>
+</html>

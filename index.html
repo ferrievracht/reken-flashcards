@@ -1,0 +1,3107 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Reken Flashcards - Leren Rekenen!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            max-width: 550px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #764ba2;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .emoji-header {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        /* Settings Panel */
+        .settings {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .setting-group {
+            margin-bottom: 20px;
+        }
+
+        .setting-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .setting-label {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .option-btn {
+            padding: 12px 20px;
+            border: 3px solid #667eea;
+            background: white;
+            border-radius: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .option-btn:hover {
+            background: #e8ebff;
+            transform: scale(1.05);
+        }
+
+        .option-btn.selected {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Start Button */
+        .start-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            box-shadow: 0 10px 30px rgba(17, 153, 142, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(17, 153, 142, 0.5);
+        }
+
+        /* Flashcard */
+        .flashcard-container {
+            display: none;
+        }
+
+        .flashcard-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: stretch;
+            margin: 15px 0;
+        }
+
+        .flashcard-wrapper .flashcard {
+            margin: 0;
+            flex: 1;
+        }
+
+        /* Number Keypad */
+        .number-keypad {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .keypad-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            color: #764ba2;
+            font-size: 1.4rem;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .keypad-btn:hover {
+            transform: scale(1.1);
+            background: #f0f0f0;
+        }
+
+        .keypad-btn:active {
+            transform: scale(0.95);
+        }
+
+        .keypad-clear {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .keypad-clear:hover {
+            background: #ff5252;
+        }
+
+        .flashcard {
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 100%);
+            border-radius: 25px;
+            padding: 30px;
+            margin: 15px 0;
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
+            min-height: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .sum-direction-hints {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .direction-hint {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .direction-hint.active {
+            background: white;
+            color: #ff6b6b;
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .sum {
+            font-size: 3rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        }
+
+        .answer-input {
+            font-size: 2.5rem;
+            width: 110px;
+            text-align: center;
+            border: 4px solid white;
+            border-radius: 12px;
+            padding: 8px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            font-family: inherit;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+        }
+
+        /* Feedback */
+        .feedback {
+            font-size: 1.5rem;
+            margin: 10px 0;
+            min-height: 35px;
+        }
+
+        .feedback.correct {
+            color: #11998e;
+        }
+
+        .feedback.incorrect {
+            color: #ff6b6b;
+        }
+
+        /* Score */
+        .score-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 10px;
+        }
+
+        .score-item {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 12px;
+        }
+
+        .score-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .score-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #764ba2;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: #e0e0e0;
+            border-radius: 8px;
+            height: 15px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .nav-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .back-btn {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Results */
+        .results-container {
+            display: none;
+        }
+
+        .results-emoji {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        .results-text {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .results-score {
+            font-size: 3rem;
+            color: #764ba2;
+            margin-bottom: 30px;
+        }
+
+        .star-rating {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        /* Puzzle Reward */
+        .puzzle-container {
+            position: relative;
+            width: 100%;
+            max-width: 200px;
+            margin: 0 auto 10px;
+            aspect-ratio: 1;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            background: #e0e0e0;
+        }
+
+        .puzzle-grid {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .puzzle-piece {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.5s ease;
+        }
+
+        .puzzle-piece::before {
+            content: '?';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            color: white;
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
+        }
+
+        .puzzle-piece.revealed::before {
+            opacity: 0;
+        }
+
+        .puzzle-piece .piece-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .puzzle-piece.revealed .piece-image {
+            opacity: 1;
+        }
+
+        .puzzle-piece.revealed {
+            animation: pieceReveal 0.6s ease;
+        }
+
+        @keyframes pieceReveal {
+            0% { transform: scale(1.2) rotateY(90deg); }
+            50% { transform: scale(1.1) rotateY(0deg); }
+            100% { transform: scale(1); }
+        }
+
+        .puzzle-label {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .puzzle-progress {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #764ba2;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        /* Animations */
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .bounce {
+            animation: bounce 0.5s ease;
+        }
+
+        .shake {
+            animation: shake 0.5s ease;
+        }
+
+        /* Number Line */
+        .numberline-toggle {
+            margin-top: 15px;
+        }
+
+        .numberline-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .numberline-btn:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .numberline-btn.active {
+            background: white;
+            color: #ff6b6b;
+        }
+
+        .numberline-container {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        .numberline-container.visible {
+            display: block;
+        }
+
+        .numberline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: fit-content;
+            padding: 10px 0;
+        }
+
+        .numberline-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 30px;
+        }
+
+        .numberline-tick {
+            width: 2px;
+            height: 15px;
+            background: #764ba2;
+        }
+
+        .numberline-number {
+            font-size: 1rem;
+            color: #764ba2;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .numberline-line {
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            flex-grow: 1;
+            min-width: 20px;
+        }
+
+        .numberline-highlight {
+            background: #ff6b6b;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            position: relative;
+            top: -5px;
+        }
+
+        @keyframes pieceHide {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2) rotateY(90deg); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .puzzle-piece.hiding {
+            animation: pieceHide 0.6s ease;
+        }
+
+        /* Abacus / Telraam */
+        .helper-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .helper-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid white;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .helper-btn:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .helper-btn.active {
+            background: white;
+            color: #ff6b6b;
+        }
+
+        .abacus-container {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 12px;
+        }
+
+        .abacus-container.visible {
+            display: block;
+        }
+
+        .abacus {
+            background: linear-gradient(180deg, #8B4513 0%, #A0522D 50%, #8B4513 100%);
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.2);
+            border: 3px solid #5D3A1A;
+        }
+
+        .abacus-row {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            position: relative;
+        }
+
+        .abacus-rod {
+            flex: 1;
+            height: 8px;
+            background: linear-gradient(180deg, #C0C0C0 0%, #808080 50%, #C0C0C0 100%);
+            border-radius: 4px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .abacus-beads {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 36px;
+            position: relative;
+        }
+
+        .abacus-bead {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: absolute;
+            box-shadow:
+                inset -3px -3px 6px rgba(0,0,0,0.3),
+                inset 3px 3px 6px rgba(255,255,255,0.3),
+                0 2px 4px rgba(0,0,0,0.3);
+            z-index: 1;
+        }
+
+        .abacus-bead:hover {
+            transform: scale(1.1);
+            box-shadow:
+                inset -3px -3px 6px rgba(0,0,0,0.3),
+                inset 3px 3px 6px rgba(255,255,255,0.3),
+                0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .abacus-bead:active {
+            transform: scale(0.95);
+        }
+
+        .abacus-bead.row-1 {
+            background: linear-gradient(135deg, #FF6B6B 0%, #EE5A5A 50%, #CC4444 100%);
+        }
+
+        .abacus-bead.row-2 {
+            background: linear-gradient(135deg, #4ECDC4 0%, #3DBDB5 50%, #2AAA9E 100%);
+        }
+
+        .abacus-bead.active {
+            box-shadow:
+                inset -3px -3px 6px rgba(0,0,0,0.3),
+                inset 3px 3px 6px rgba(255,255,255,0.3),
+                0 0 10px rgba(255,215,0,0.8),
+                0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .abacus-divider {
+            width: 4px;
+            height: 100%;
+            background: #5D3A1A;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .abacus-count {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1.1rem;
+            color: #5D3A1A;
+            font-weight: bold;
+        }
+
+        .abacus-row-label {
+            width: 25px;
+            font-size: 0.8rem;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Draggable Popup */
+        .draggable-popup {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            min-width: 200px;
+            min-height: 150px;
+            animation: popupIn 0.3s ease;
+            overflow: hidden;
+        }
+
+        /* Resize handle at bottom-right corner */
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 20px;
+            height: 20px;
+            cursor: nwse-resize;
+            background: linear-gradient(135deg, transparent 50%, rgba(102, 126, 234, 0.3) 50%);
+            border-radius: 0 0 15px 0;
+        }
+
+        .resize-handle::before {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid rgba(102, 126, 234, 0.6);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.6);
+        }
+
+        .draggable-popup.visible {
+            display: block;
+        }
+
+        .popup-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 15px 15px 0 0;
+            cursor: grab;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .popup-header:active {
+            cursor: grabbing;
+        }
+
+        .popup-header-title {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .popup-close-btn {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .popup-close-btn:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .popup-body {
+            padding: 20px;
+            text-align: center;
+        }
+
+        @keyframes popupIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Legacy popup styles for compatibility */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-overlay.visible {
+            display: flex;
+        }
+
+        .popup-content {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            max-width: 600px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            animation: popupIn 0.3s ease;
+        }
+
+        .popup-title {
+            font-size: 1.8rem;
+            color: #764ba2;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .popup-close {
+            background: #e0e0e0;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 15px;
+        }
+
+        .popup-close:hover {
+            background: #d0d0d0;
+        }
+
+        /* Simple Abacus (10 beads) */
+        .simple-abacus {
+            background: linear-gradient(180deg, #8B4513 0%, #A0522D 50%, #8B4513 100%);
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.3);
+            border: 3px solid #5D3A1A;
+        }
+
+        .simple-abacus-rod {
+            height: 8px;
+            background: linear-gradient(180deg, #D4D4D4 0%, #A0A0A0 50%, #D4D4D4 100%);
+            border-radius: 4px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            margin: 8px 0;
+        }
+
+        .simple-abacus-beads {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 40px;
+            position: relative;
+            touch-action: none;
+        }
+
+        .simple-bead {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            cursor: grab;
+            transition: left 0.15s ease-out, transform 0.15s ease;
+            position: absolute;
+            box-shadow:
+                inset -3px -3px 6px rgba(0,0,0,0.3),
+                inset 3px 3px 6px rgba(255,255,255,0.4),
+                0 3px 6px rgba(0,0,0,0.4);
+            z-index: 1;
+            user-select: none;
+        }
+
+        .simple-bead:hover {
+            transform: scale(1.1);
+            cursor: grab;
+        }
+
+        .simple-bead:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        .simple-bead.dragging {
+            transition: none;
+            cursor: grabbing;
+            z-index: 10;
+            transform: scale(1.1);
+        }
+
+        .simple-bead.bead-red {
+            background: linear-gradient(135deg, #FF5252 0%, #E53935 50%, #C62828 100%);
+        }
+
+        .simple-bead.bead-white {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 50%, #E0E0E0 100%);
+            box-shadow:
+                inset -3px -3px 6px rgba(0,0,0,0.15),
+                inset 3px 3px 6px rgba(255,255,255,0.8),
+                0 3px 6px rgba(0,0,0,0.4);
+        }
+
+        .simple-bead.active {
+            box-shadow:
+                inset -3px -3px 6px rgba(0,0,0,0.3),
+                inset 3px 3px 6px rgba(255,255,255,0.4),
+                0 0 10px rgba(255,215,0,1),
+                0 3px 6px rgba(0,0,0,0.4);
+        }
+
+        .simple-bead.bead-white.active {
+            box-shadow:
+                inset -3px -3px 6px rgba(0,0,0,0.15),
+                inset 3px 3px 6px rgba(255,255,255,0.8),
+                0 0 10px rgba(255,215,0,1),
+                0 3px 6px rgba(0,0,0,0.4);
+        }
+
+        .simple-abacus-count {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 1.2rem;
+            color: #FFEFD5;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Operator Question */
+        .operator-question {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-top: 10px;
+            border: 3px solid #667eea;
+        }
+
+        .operator-question.visible {
+            display: block;
+            animation: popupIn 0.3s ease;
+        }
+
+        .operator-question-text {
+            font-size: 0.95rem;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .operator-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .operator-btn {
+            padding: 8px 18px;
+            border: 2px solid #667eea;
+            background: white;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .operator-btn:hover {
+            background: #e8ebff;
+            transform: scale(1.05);
+        }
+
+        .operator-btn.correct-choice {
+            background: #11998e;
+            border-color: #11998e;
+            color: white;
+            animation: bounce 0.5s ease;
+        }
+
+        .operator-btn.wrong-choice {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+            color: white;
+            animation: shake 0.5s ease;
+        }
+
+        .operator-feedback {
+            font-size: 0.9rem;
+            margin-top: 6px;
+        }
+
+        .operator-feedback {
+            margin-top: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        /* Responsive - Small screens */
+        @media (max-width: 500px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .sum {
+                font-size: 3rem;
+            }
+
+            .answer-input {
+                font-size: 2rem;
+                width: 100px;
+            }
+
+            .numberline-btn {
+                padding: 6px 15px;
+                font-size: 0.9rem;
+            }
+
+            .numberline-container {
+                padding: 15px;
+            }
+
+            .numberline-item {
+                min-width: 25px;
+            }
+
+            .numberline-number {
+                font-size: 0.8rem;
+            }
+
+            .numberline-highlight {
+                width: 25px;
+                height: 25px;
+                font-size: 0.8rem;
+            }
+
+            .helper-buttons {
+                gap: 8px;
+            }
+
+            .helper-btn {
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+
+            .abacus-container {
+                padding: 10px;
+            }
+
+            .abacus {
+                padding: 8px;
+            }
+
+            .abacus-bead {
+                width: 22px;
+                height: 22px;
+            }
+
+            .abacus-row-label {
+                width: 20px;
+                font-size: 0.7rem;
+            }
+
+            .abacus-count {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Responsive - 13.3 inch screens and larger (1280px+) */
+        @media (min-width: 1280px) and (max-height: 900px) {
+            body {
+                padding: 5px;
+                align-items: center;
+            }
+
+            .container {
+                max-width: 650px;
+                padding: 12px 20px;
+                border-radius: 20px;
+            }
+
+            .puzzle-container {
+                max-width: 120px;
+                margin: 0 auto 4px;
+                border-radius: 8px;
+            }
+
+            .puzzle-label {
+                font-size: 0.8rem;
+                margin-bottom: 3px;
+            }
+
+            .puzzle-progress {
+                font-size: 0.75rem;
+                margin-top: 3px;
+            }
+
+            .score-container {
+                margin-bottom: 5px;
+            }
+
+            .score-item {
+                padding: 5px 15px;
+                border-radius: 10px;
+            }
+
+            .score-label {
+                font-size: 0.7rem;
+            }
+
+            .score-value {
+                font-size: 1.1rem;
+            }
+
+            .progress-container {
+                height: 8px;
+                margin-bottom: 5px;
+            }
+
+            .flashcard {
+                padding: 15px;
+                border-radius: 15px;
+                min-height: auto;
+                margin: 5px 0;
+            }
+
+            .sum {
+                font-size: 2.5rem;
+                margin-bottom: 8px;
+            }
+
+            .answer-input {
+                font-size: 2rem;
+                width: 100px;
+                padding: 5px;
+                border-radius: 10px;
+            }
+
+            .feedback {
+                font-size: 1.2rem;
+                min-height: 25px;
+                margin: 5px 0;
+            }
+
+            .nav-buttons {
+                margin-top: 5px;
+            }
+
+            .nav-btn {
+                padding: 8px 18px;
+                font-size: 0.9rem;
+                border-radius: 15px;
+            }
+
+            .numberline-container {
+                padding: 8px;
+                margin-top: 8px;
+                border-radius: 10px;
+            }
+
+            .numberline-item {
+                min-width: 22px;
+            }
+
+            .numberline-number {
+                font-size: 0.75rem;
+            }
+
+            .numberline-highlight {
+                width: 22px;
+                height: 22px;
+                font-size: 0.7rem;
+            }
+
+            .numberline-tick {
+                height: 10px;
+            }
+
+            .numberline-line {
+                height: 3px;
+                min-width: 15px;
+            }
+
+            .helper-buttons {
+                margin-top: 6px;
+                gap: 6px;
+            }
+
+            .helper-btn {
+                padding: 4px 10px;
+                font-size: 0.8rem;
+            }
+
+            .operator-question {
+                padding: 8px 10px;
+                margin-top: 6px;
+            }
+
+            .operator-question-text {
+                font-size: 0.85rem;
+                margin-bottom: 6px;
+            }
+
+            .operator-btn {
+                padding: 6px 14px;
+                font-size: 0.9rem;
+            }
+
+            .operator-feedback {
+                font-size: 0.8rem;
+                margin-top: 4px;
+            }
+
+            /* Settings screen adjustments */
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 5px;
+            }
+
+            .emoji-header {
+                font-size: 2rem;
+                margin-bottom: 8px;
+            }
+
+            .settings {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .setting-group {
+                margin-bottom: 10px;
+            }
+
+            .setting-label {
+                font-size: 1rem;
+                margin-bottom: 6px;
+            }
+
+            .option-btn {
+                padding: 8px 14px;
+                font-size: 0.9rem;
+            }
+
+            .start-btn {
+                padding: 12px 35px;
+                font-size: 1.2rem;
+            }
+
+            /* Results screen adjustments */
+            .results-emoji {
+                font-size: 4rem;
+                margin: 15px 0;
+            }
+
+            .results-text {
+                font-size: 1.3rem;
+                margin-bottom: 15px;
+            }
+
+            .results-score {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+            }
+
+            .star-rating {
+                font-size: 2.5rem;
+                margin-bottom: 15px;
+            }
+        }
+
+        /* Larger 13.3 inch screens with higher resolution */
+        @media (min-width: 1280px) and (min-height: 901px) {
+            .container {
+                max-width: 750px;
+                padding: 35px;
+            }
+
+            .puzzle-container {
+                max-width: 280px;
+            }
+
+            .flashcard {
+                padding: 40px;
+                margin: 20px 0;
+            }
+
+            .sum {
+                font-size: 4rem;
+            }
+
+            .answer-input {
+                font-size: 3.2rem;
+                width: 140px;
+            }
+
+            .feedback {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* iPad / Tablet screens */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            body {
+                padding: 20px;
+            }
+
+            .container {
+                max-width: 700px;
+                padding: 30px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .flashcard-wrapper {
+                gap: 20px;
+            }
+
+            .flashcard {
+                padding: 35px;
+            }
+
+            .sum {
+                font-size: 3.5rem;
+            }
+
+            .answer-input {
+                font-size: 3rem;
+                width: 130px;
+                padding: 12px;
+            }
+
+            .number-keypad {
+                padding: 20px;
+                gap: 12px;
+            }
+
+            .keypad-btn {
+                width: 65px;
+                height: 65px;
+                font-size: 1.8rem;
+                border-radius: 15px;
+            }
+
+            .helper-btn {
+                padding: 10px 18px;
+                font-size: 1rem;
+            }
+
+            .puzzle-container {
+                max-width: 180px;
+            }
+
+            .score-value {
+                font-size: 1.8rem;
+            }
+
+            .nav-btn {
+                padding: 15px 30px;
+                font-size: 1.1rem;
+            }
+
+            .feedback {
+                font-size: 1.6rem;
+            }
+        }
+
+        /* Visual Number Line (Telbalk) */
+        .visual-line-container {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+
+        /* Draggable popup specific sizing */
+        #visualLinePopup {
+            width: 380px;
+            min-width: 280px;
+        }
+
+        #abacusPopup {
+            width: 300px;
+            min-width: 250px;
+        }
+
+        #abacusPopup .popup-body {
+            padding: 12px;
+            height: calc(100% - 40px);
+            box-sizing: border-box;
+            overflow: auto;
+        }
+
+        #visualLinePopup .popup-body {
+            padding: 10px;
+            height: calc(100% - 40px);
+            box-sizing: border-box;
+            overflow: auto;
+        }
+
+        #visualLinePopup .visual-line-container {
+            overflow: auto;
+        }
+
+        .visual-line-squares {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+        }
+
+        .visual-line-square {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #333;
+            box-sizing: border-box;
+        }
+
+        .visual-line-square.red {
+            background: #E53935;
+        }
+
+        .visual-line-square.white {
+            background: white;
+        }
+
+        .visual-line-numbers {
+            display: flex;
+            justify-content: center;
+            margin-top: 3px;
+        }
+
+        .visual-line-number {
+            width: 28px;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .visual-line-number.bold {
+            font-size: 0.85rem;
+        }
+
+        .visual-line-balls {
+            display: flex;
+            justify-content: center;
+            margin-top: 6px;
+            min-height: 120px;
+            align-items: flex-start;
+        }
+
+        .visual-line-column {
+            width: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding-top: 3px;
+        }
+
+        .visual-ball {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%);
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.3s ease;
+            box-shadow:
+                inset -2px -2px 4px rgba(0,0,0,0.3),
+                inset 2px 2px 4px rgba(255,255,255,0.3),
+                0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .visual-ball:hover {
+            transform: scale(1.15);
+        }
+
+        .visual-ball.removed {
+            opacity: 0.2;
+            transform: scale(0.7);
+            background: #ccc;
+            box-shadow: none;
+        }
+
+        @media (max-width: 500px) {
+            .visual-line-square {
+                width: 32px;
+                height: 32px;
+            }
+
+            .visual-line-number {
+                width: 32px;
+                font-size: 0.9rem;
+            }
+
+            .visual-line-number.bold {
+                font-size: 1rem;
+            }
+
+            .visual-line-column {
+                width: 32px;
+            }
+
+            .visual-ball {
+                width: 22px;
+                height: 22px;
+            }
+        }
+
+        /* iPad Connect Button & Modal */
+        .connect-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .connect-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .connect-modal.show {
+            display: flex;
+        }
+
+        .connect-modal-content {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .connect-modal h2 {
+            color: #764ba2;
+            margin-bottom: 15px;
+        }
+
+        .connect-modal .qr-code {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            display: inline-block;
+            margin: 15px 0;
+        }
+
+        .connect-modal .connect-url {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            word-break: break-all;
+            margin: 15px 0;
+        }
+
+        .connect-modal .copy-btn {
+            background: #11998e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 5px;
+        }
+
+        .connect-modal .close-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Settings Screen -->
+        <div class="settings-container" id="settingsScreen">
+            <div class="emoji-header">🧮 ✏️ 📚</div>
+            <h1>Reken Flashcards!</h1>
+            <p style="color: #666; margin-bottom: 15px;">Kies je niveau en begin met oefenen!</p>
+            <button class="connect-btn" onclick="showConnectModal()">📱 iPad Verbinden</button>
+
+            <div class="settings">
+                <div class="setting-group">
+                    <label class="setting-label">📊 Getallen tot:</label>
+                    <div class="button-group" id="rangeButtons">
+                        <button class="option-btn" data-range="5">1 - 5</button>
+                        <button class="option-btn selected" data-range="10">1 - 10</button>
+                        <button class="option-btn" data-range="15">1 - 15</button>
+                        <button class="option-btn" data-range="20">1 - 20</button>
+                        <button class="option-btn" data-range="50">1 - 50</button>
+                        <button class="option-btn" data-range="100">1 - 100</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">🎯 Niveau (optellen/aftrekken met):</label>
+                    <div class="button-group" id="levelButtons">
+                        <button class="option-btn selected" data-level="1">+1 / -1</button>
+                        <button class="option-btn" data-level="2">+2 / -2</button>
+                        <button class="option-btn" data-level="3">+3 / -3</button>
+                        <button class="option-btn" data-level="5">+5 / -5</button>
+                        <button class="option-btn" data-level="10">+10 / -10</button>
+                        <button class="option-btn" data-level="mix">Mix!</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">🔢 Aantal sommen:</label>
+                    <div class="button-group" id="countButtons">
+                        <button class="option-btn" data-count="5">5</button>
+                        <button class="option-btn selected" data-count="10">10</button>
+                        <button class="option-btn" data-count="15">15</button>
+                        <button class="option-btn" data-count="20">20</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="start-btn" onclick="startGame()">🚀 Start!</button>
+        </div>
+
+        <!-- Flashcard Screen -->
+        <div class="flashcard-container" id="flashcardScreen">
+            <div class="puzzle-label">Los de sommen op om de foto te ontdekken!</div>
+            <div class="puzzle-container">
+                <div class="puzzle-grid" id="puzzleGrid"></div>
+            </div>
+            <div class="puzzle-progress" id="puzzleProgress">0 puzzelstukjes onthuld</div>
+
+            <div class="score-container">
+                <div class="score-item">
+                    <div class="score-label">Goed</div>
+                    <div class="score-value" id="correctScore">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Vraag</div>
+                    <div class="score-value"><span id="currentQuestion">1</span>/<span id="totalQuestions">10</span></div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Fout</div>
+                    <div class="score-value" id="incorrectScore">0</div>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="flashcard-wrapper">
+                <div class="flashcard" id="flashcard">
+                    <div class="sum-direction-hints">
+                        <span class="direction-hint minus-hint" id="minusHint">⬅️ - (min)</span>
+                        <span class="direction-hint plus-hint" id="plusHint">+ (plus) ➡️</span>
+                    </div>
+                    <div class="sum" id="sumDisplay">5 + 3 = </div>
+                    <input type="number" class="answer-input" id="answerInput" autofocus>
+                <div class="helper-buttons">
+                    <button class="helper-btn" id="numberlineBtn" onclick="toggleNumberline()">📏 Getallenlijn</button>
+                    <button class="helper-btn" id="abacusBtn" onclick="toggleAbacus()">🧮 Telraam</button>
+                    <button class="helper-btn" id="visualLineBtn" onclick="openVisualLine()">🔢 Telbalk</button>
+                </div>
+                <div class="numberline-container" id="numberlineContainer">
+                    <div class="numberline" id="numberline"></div>
+                </div>
+                </div>
+
+                <!-- Number Keypad -->
+                <div class="number-keypad" id="numberKeypad">
+                    <button class="keypad-btn" onclick="keypadInput(1)">1</button>
+                    <button class="keypad-btn" onclick="keypadInput(2)">2</button>
+                    <button class="keypad-btn" onclick="keypadInput(3)">3</button>
+                    <button class="keypad-btn" onclick="keypadInput(4)">4</button>
+                    <button class="keypad-btn" onclick="keypadInput(5)">5</button>
+                    <button class="keypad-btn" onclick="keypadInput(6)">6</button>
+                    <button class="keypad-btn" onclick="keypadInput(7)">7</button>
+                    <button class="keypad-btn" onclick="keypadInput(8)">8</button>
+                    <button class="keypad-btn" onclick="keypadInput(9)">9</button>
+                    <button class="keypad-btn" onclick="keypadInput(10)">10</button>
+                    <button class="keypad-btn keypad-zero" onclick="keypadInput(0)">0</button>
+                    <button class="keypad-btn keypad-clear" onclick="keypadClear()">⌫</button>
+                </div>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <!-- Operator Question (shown on wrong answer) -->
+            <div class="operator-question" id="operatorQuestion">
+                <div class="operator-question-text">Is dit een PLUS ➕ (meer) of MIN ➖ (minder) som?</div>
+                <div class="operator-buttons">
+                    <button class="operator-btn" id="btnPlus" onclick="checkOperator('+')">➕ Plus (meer)</button>
+                    <button class="operator-btn" id="btnMinus" onclick="checkOperator('-')">➖ Min (minder)</button>
+                </div>
+                <div class="operator-feedback" id="operatorFeedback"></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button class="nav-btn back-btn" onclick="backToSettings()">⬅️ Terug</button>
+            </div>
+        </div>
+
+        <!-- Abacus Popup (Draggable) -->
+        <div class="draggable-popup" id="abacusPopup">
+            <div class="popup-header" id="abacusPopupHeader">
+                <span class="popup-header-title">🧮 Telraam</span>
+                <button class="popup-close-btn" onclick="closeAbacusPopup()">✕</button>
+            </div>
+            <div class="popup-body">
+                <div class="simple-abacus">
+                    <div class="simple-abacus-rod">
+                        <div class="simple-abacus-beads" id="simpleAbacusBeads"></div>
+                    </div>
+                </div>
+                <div class="simple-abacus-count">Totaal: <span id="simpleAbacusTotal">0</span></div>
+            </div>
+            <div class="resize-handle" id="abacusResizeHandle"></div>
+        </div>
+
+        <!-- Visual Number Line Popup (Draggable) -->
+        <div class="draggable-popup" id="visualLinePopup">
+            <div class="popup-header" id="visualLinePopupHeader">
+                <span class="popup-header-title">🔢 Telbalk</span>
+                <button class="popup-close-btn" onclick="closeVisualLine()">✕</button>
+            </div>
+            <div class="popup-body">
+                <div class="visual-line-container">
+                    <div class="visual-line-squares" id="visualLineSquares"></div>
+                    <div class="visual-line-numbers" id="visualLineNumbers"></div>
+                    <div class="visual-line-balls" id="visualLineBalls"></div>
+                </div>
+            </div>
+            <div class="resize-handle" id="visualLineResizeHandle"></div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="results-container" id="resultsScreen">
+            <h1>🎉 Klaar!</h1>
+            <div class="puzzle-container" style="margin-bottom: 20px;">
+                <div class="puzzle-grid" id="puzzleGridFinal"></div>
+            </div>
+            <div class="results-emoji" id="resultsEmoji">🌟</div>
+            <div class="star-rating" id="starRating">⭐⭐⭐</div>
+            <div class="results-text" id="resultsText">Geweldig gedaan!</div>
+            <div class="results-score" id="finalScore">8/10 goed!</div>
+
+            <div class="nav-buttons">
+                <button class="nav-btn back-btn" onclick="backToSettings()">⚙️ Instellingen</button>
+                <button class="nav-btn next-btn" onclick="playAgain()">🔄 Nog een keer!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let settings = {
+            range: 10,
+            level: 1,
+            count: 10
+        };
+
+        let gameState = {
+            questions: [],
+            currentIndex: 0,
+            correct: 0,
+            incorrect: 0,
+            answered: false
+        };
+
+        // Puzzle State
+        let puzzleState = {
+            gridSize: { cols: 0, rows: 0 },
+            revealedPieces: [],
+            totalPieces: 0
+        };
+
+        // Settings controlled by teacher
+        let numberlineEnabled = true;
+        let telraamEnabled = true;
+        let directionHintsEnabled = true;
+        let currentPuzzleImage = '/photos/fee.jpg';
+
+        function calculateGridSize(questionCount) {
+            // Calculate a nice grid based on question count
+            if (questionCount <= 5) return { cols: 2, rows: 3 };
+            if (questionCount <= 10) return { cols: 3, rows: 4 };
+            if (questionCount <= 15) return { cols: 4, rows: 4 };
+            return { cols: 4, rows: 5 };
+        }
+
+        function createPuzzleGrid(containerId, revealAll = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            const { cols, rows } = puzzleState.gridSize;
+            container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            container.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+            puzzleState.totalPieces = cols * rows;
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const piece = document.createElement('div');
+                    piece.className = 'puzzle-piece';
+                    piece.dataset.index = row * cols + col;
+
+                    const img = document.createElement('div');
+                    img.className = 'piece-image';
+                    img.style.backgroundImage = `url('${currentPuzzleImage}')`;
+                    img.style.backgroundSize = `${cols * 100}% ${rows * 100}%`;
+                    // Calculate position so each piece shows correct part of image
+                    const posX = cols > 1 ? (col / (cols - 1)) * 100 : 0;
+                    const posY = rows > 1 ? (row / (rows - 1)) * 100 : 0;
+                    img.style.backgroundPosition = `${posX}% ${posY}%`;
+
+                    piece.appendChild(img);
+                    container.appendChild(piece);
+
+                    const index = row * cols + col;
+                    if (revealAll || puzzleState.revealedPieces.includes(index)) {
+                        piece.classList.add('revealed');
+                    }
+                }
+            }
+        }
+
+        function revealRandomPiece() {
+            const allPieces = [];
+            for (let i = 0; i < puzzleState.totalPieces; i++) {
+                if (!puzzleState.revealedPieces.includes(i)) {
+                    allPieces.push(i);
+                }
+            }
+
+            if (allPieces.length === 0) return;
+
+            const randomIndex = allPieces[Math.floor(Math.random() * allPieces.length)];
+            puzzleState.revealedPieces.push(randomIndex);
+
+            const piece = document.querySelector(`#puzzleGrid .puzzle-piece[data-index="${randomIndex}"]`);
+            if (piece) {
+                piece.classList.add('revealed');
+            }
+
+            updatePuzzleProgress();
+        }
+
+        // Update puzzle based on percentage of correct answers
+        function updatePuzzleByPercentage() {
+            const totalAnswered = gameState.correct + gameState.incorrect;
+            if (totalAnswered === 0) return;
+
+            // Calculate target pieces based on correct percentage of TOTAL questions
+            const correctPercentage = gameState.correct / settings.count;
+            const targetPieces = Math.round(correctPercentage * puzzleState.totalPieces);
+
+            const currentPieces = puzzleState.revealedPieces.length;
+
+            if (targetPieces > currentPieces) {
+                // Need to reveal more pieces
+                const toReveal = targetPieces - currentPieces;
+                for (let i = 0; i < toReveal; i++) {
+                    revealRandomPieceNoUpdate();
+                }
+            } else if (targetPieces < currentPieces) {
+                // Need to hide some pieces
+                const toHide = currentPieces - targetPieces;
+                for (let i = 0; i < toHide; i++) {
+                    hideRandomPieceNoUpdate();
+                }
+            }
+
+            updatePuzzleProgress();
+        }
+
+        function revealRandomPieceNoUpdate() {
+            const allPieces = [];
+            for (let i = 0; i < puzzleState.totalPieces; i++) {
+                if (!puzzleState.revealedPieces.includes(i)) {
+                    allPieces.push(i);
+                }
+            }
+            if (allPieces.length === 0) return;
+
+            const randomIndex = allPieces[Math.floor(Math.random() * allPieces.length)];
+            puzzleState.revealedPieces.push(randomIndex);
+
+            const piece = document.querySelector(`#puzzleGrid .puzzle-piece[data-index="${randomIndex}"]`);
+            if (piece) {
+                piece.classList.add('revealed');
+            }
+        }
+
+        function hideRandomPieceNoUpdate() {
+            if (puzzleState.revealedPieces.length === 0) return;
+
+            const randomIndex = Math.floor(Math.random() * puzzleState.revealedPieces.length);
+            const pieceIndex = puzzleState.revealedPieces[randomIndex];
+            puzzleState.revealedPieces.splice(randomIndex, 1);
+
+            const piece = document.querySelector(`#puzzleGrid .puzzle-piece[data-index="${pieceIndex}"]`);
+            if (piece) {
+                piece.classList.remove('revealed');
+            }
+        }
+
+        function updatePuzzleProgress() {
+            const count = puzzleState.revealedPieces.length;
+            const percentage = puzzleState.totalPieces > 0 ? Math.round((count / puzzleState.totalPieces) * 100) : 0;
+            document.getElementById('puzzleProgress').textContent = `${percentage}% zichtbaar (${count}/${puzzleState.totalPieces})`;
+        }
+
+        // Initialize button selections
+        document.querySelectorAll('.button-group').forEach(group => {
+            group.addEventListener('click', (e) => {
+                if (e.target.classList.contains('option-btn')) {
+                    group.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                }
+            });
+        });
+
+        // Handle Enter key
+        document.getElementById('answerInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !waitingForOperator) {
+                if (!gameState.answered) {
+                    checkAnswer();
+                } else {
+                    nextQuestion();
+                }
+            }
+        });
+
+        // Auto-submit when answer is complete
+        document.getElementById('answerInput').addEventListener('input', (e) => {
+            if (gameState.answered || waitingForOperator) return;
+
+            const userInput = e.target.value;
+
+            // Clear feedback when user starts typing
+            const feedback = document.getElementById('feedback');
+            if (feedback.textContent.includes('Probeer') || feedback.textContent.includes('opnieuw')) {
+                feedback.textContent = '';
+                feedback.className = 'feedback';
+            }
+
+            if (userInput === '' || userInput === '-') return;
+
+            const correctAnswer = gameState.questions[gameState.currentIndex].answer;
+            const correctLength = correctAnswer.toString().length;
+
+            // Auto-check when user has typed enough digits
+            if (userInput.length >= correctLength) {
+                setTimeout(() => {
+                    if (!gameState.answered && !waitingForOperator) {
+                        checkAnswer();
+                    }
+                }, 200); // Short delay for better UX
+            }
+        });
+
+        // Numberline state
+        let numberlineVisible = false;
+
+        function toggleNumberline() {
+            numberlineVisible = !numberlineVisible;
+            const container = document.getElementById('numberlineContainer');
+            const btn = document.getElementById('numberlineBtn');
+
+            if (numberlineVisible) {
+                container.classList.add('visible');
+                btn.classList.add('active');
+                createNumberline();
+            } else {
+                container.classList.remove('visible');
+                btn.classList.remove('active');
+            }
+        }
+
+        // Simple Abacus state (10 beads popup)
+        let simpleAbacusState = new Array(10).fill(false);
+
+        function toggleAbacus() {
+            openAbacusPopup();
+        }
+
+        function openAbacusPopup() {
+            const popup = document.getElementById('abacusPopup');
+            popup.classList.add('visible');
+            // Position popup at a good starting location
+            if (!popup.style.left) {
+                popup.style.left = '20px';
+                popup.style.top = '100px';
+            }
+            document.getElementById('abacusBtn').classList.add('active');
+            createSimpleAbacus();
+            initDraggable('abacusPopup', 'abacusPopupHeader');
+            initResizable('abacusPopup', 'abacusResizeHandle');
+        }
+
+        function closeAbacusPopup() {
+            const popup = document.getElementById('abacusPopup');
+            const btn = document.getElementById('abacusBtn');
+            const input = document.getElementById('answerInput');
+            if (popup) popup.classList.remove('visible');
+            if (btn) btn.classList.remove('active');
+            if (input) input.focus();
+        }
+
+        // Draggable popup functionality
+        function initDraggable(popupId, headerId) {
+            const popup = document.getElementById(popupId);
+            const header = document.getElementById(headerId);
+
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            const onStart = (e) => {
+                if (e.target.closest('.popup-close-btn')) return;
+                isDragging = true;
+                const touch = e.touches ? e.touches[0] : e;
+                startX = touch.clientX;
+                startY = touch.clientY;
+                initialLeft = popup.offsetLeft;
+                initialTop = popup.offsetTop;
+                popup.style.transition = 'none';
+            };
+
+            const onMove = (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const touch = e.touches ? e.touches[0] : e;
+                const deltaX = touch.clientX - startX;
+                const deltaY = touch.clientY - startY;
+
+                let newLeft = initialLeft + deltaX;
+                let newTop = initialTop + deltaY;
+
+                // Keep popup within viewport
+                newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - popup.offsetWidth));
+                newTop = Math.max(0, Math.min(newTop, window.innerHeight - popup.offsetHeight));
+
+                popup.style.left = newLeft + 'px';
+                popup.style.top = newTop + 'px';
+            };
+
+            const onEnd = () => {
+                isDragging = false;
+                popup.style.transition = '';
+            };
+
+            header.addEventListener('mousedown', onStart);
+            header.addEventListener('touchstart', onStart, { passive: false });
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchend', onEnd);
+        }
+
+        // Resizable popup functionality
+        function initResizable(popupId, handleId) {
+            const popup = document.getElementById(popupId);
+            const handle = document.getElementById(handleId);
+            if (!handle) return;
+
+            let isResizing = false;
+            let startX, startY, startWidth, startHeight;
+
+            const onStart = (e) => {
+                isResizing = true;
+                const touch = e.touches ? e.touches[0] : e;
+                startX = touch.clientX;
+                startY = touch.clientY;
+                startWidth = popup.offsetWidth;
+                startHeight = popup.offsetHeight;
+                popup.style.transition = 'none';
+                e.preventDefault();
+                e.stopPropagation();
+            };
+
+            const onMove = (e) => {
+                if (!isResizing) return;
+                e.preventDefault();
+                const touch = e.touches ? e.touches[0] : e;
+                const deltaX = touch.clientX - startX;
+                const deltaY = touch.clientY - startY;
+
+                const newWidth = Math.max(200, startWidth + deltaX);
+                const newHeight = Math.max(150, startHeight + deltaY);
+
+                popup.style.width = newWidth + 'px';
+                popup.style.height = newHeight + 'px';
+            };
+
+            const onEnd = () => {
+                isResizing = false;
+                popup.style.transition = '';
+            };
+
+            handle.addEventListener('mousedown', onStart);
+            handle.addEventListener('touchstart', onStart, { passive: false });
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchend', onEnd);
+        }
+
+        // Drag state
+        let dragBead = null;
+        let dragStartX = 0;
+        let dragBeadStartLeft = 0;
+        let hasDragged = false;
+
+        function createSimpleAbacus() {
+            const beadsContainer = document.getElementById('simpleAbacusBeads');
+            beadsContainer.innerHTML = '';
+
+            // Reset state - all beads start on the right (inactive)
+            simpleAbacusState = new Array(10).fill(false);
+
+            // Create 10 beads: 5 red, 5 white
+            for (let i = 0; i < 10; i++) {
+                const bead = document.createElement('div');
+                bead.className = 'simple-bead ' + (i < 5 ? 'bead-red' : 'bead-white');
+                bead.dataset.index = i;
+
+                // Drag start (mouse)
+                bead.addEventListener('mousedown', (e) => startDrag(e, bead, i));
+
+                // Drag start (touch)
+                bead.addEventListener('touchstart', (e) => startDrag(e, bead, i), { passive: false });
+
+                // Double click to toggle position
+                bead.addEventListener('dblclick', (e) => toggleBeadPosition(i));
+
+                beadsContainer.appendChild(bead);
+            }
+
+            // Global drag events
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchmove', handleDrag, { passive: false });
+            document.addEventListener('touchend', endDrag);
+
+            updateSimpleAbacusPositions();
+            updateSimpleAbacusTotal();
+        }
+
+        function startDrag(e, bead, index) {
+            e.preventDefault();
+            dragBead = bead;
+            dragBead.classList.add('dragging');
+            hasDragged = false;
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            dragStartX = clientX;
+            dragBeadStartLeft = parseInt(bead.style.left) || 0;
+        }
+
+        function handleDrag(e) {
+            if (!dragBead) return;
+            e.preventDefault();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const deltaX = clientX - dragStartX;
+
+            if (Math.abs(deltaX) > 5) {
+                hasDragged = true;
+            }
+
+            const newLeft = dragBeadStartLeft + deltaX;
+
+            const container = document.getElementById('simpleAbacusBeads');
+            const containerWidth = container.offsetWidth;
+            const beadWidth = 26;
+            const minLeft = 5;
+            const maxLeft = containerWidth - beadWidth - 5;
+
+            dragBead.style.left = Math.max(minLeft, Math.min(maxLeft, newLeft)) + 'px';
+        }
+
+        function endDrag(e) {
+            if (!dragBead) return;
+
+            const index = parseInt(dragBead.dataset.index);
+            const container = document.getElementById('simpleAbacusBeads');
+            const containerWidth = container.offsetWidth;
+            const beadLeft = parseInt(dragBead.style.left) || 0;
+            const beadWidth = 26;
+
+            // Calculate the midpoint for determining left/right
+            const midPoint = containerWidth * 0.5;
+
+            // Determine if bead should be active (left side) or inactive (right side)
+            const shouldBeActive = beadLeft < midPoint;
+            const wasActive = simpleAbacusState[index];
+
+            if (shouldBeActive && !wasActive) {
+                // Moving to the LEFT - push all beads in front (lower indices) to the left too
+                for (let i = 0; i <= index; i++) {
+                    simpleAbacusState[i] = true;
+                }
+            } else if (!shouldBeActive && wasActive) {
+                // Moving to the RIGHT - push all beads behind (higher indices) to the right too
+                for (let i = index; i < 10; i++) {
+                    simpleAbacusState[i] = false;
+                }
+            }
+
+            dragBead.classList.remove('dragging');
+            dragBead = null;
+
+            updateSimpleAbacusPositions();
+            updateSimpleAbacusTotal();
+        }
+
+        function updateSimpleAbacusPositions() {
+            const beads = document.querySelectorAll('#simpleAbacusBeads .simple-bead');
+            const container = document.getElementById('simpleAbacusBeads');
+            const containerWidth = container ? container.offsetWidth : 280;
+            const beadWidth = 26;
+            const spacing = 2;
+
+            // Count active and inactive beads
+            const activeCount = simpleAbacusState.filter(v => v).length;
+            const inactiveCount = 10 - activeCount;
+
+            // Calculate positions for active beads (left side, grouped together)
+            let activePosition = 0;
+            // Calculate positions for inactive beads (right side, grouped together)
+            let inactivePosition = 0;
+
+            // Position for inactive beads starts from the right
+            const inactiveStartX = containerWidth - (inactiveCount * (beadWidth + spacing));
+
+            beads.forEach((bead, i) => {
+                if (bead.classList.contains('dragging')) return; // Don't move if being dragged
+
+                const isActive = simpleAbacusState[i];
+                if (isActive) {
+                    // Active beads grouped on the left
+                    bead.style.left = (activePosition * (beadWidth + spacing) + spacing) + 'px';
+                    bead.classList.add('active');
+                    activePosition++;
+                } else {
+                    // Inactive beads grouped on the right
+                    bead.style.left = (inactiveStartX + inactivePosition * (beadWidth + spacing)) + 'px';
+                    bead.classList.remove('active');
+                    inactivePosition++;
+                }
+            });
+        }
+
+        function updateSimpleAbacusTotal() {
+            const total = simpleAbacusState.filter(v => v).length;
+            document.getElementById('simpleAbacusTotal').textContent = total;
+        }
+
+        function toggleBeadPosition(index) {
+            const isActive = simpleAbacusState[index];
+
+            if (isActive) {
+                // Move to right - push all beads behind (higher indices) to the right too
+                for (let i = index; i < 10; i++) {
+                    simpleAbacusState[i] = false;
+                }
+            } else {
+                // Move to left - push all beads in front (lower indices) to the left too
+                for (let i = 0; i <= index; i++) {
+                    simpleAbacusState[i] = true;
+                }
+            }
+
+            updateSimpleAbacusPositions();
+            updateSimpleAbacusTotal();
+        }
+
+        // Visual Number Line (Telbalk) state
+        let visualLineBalls = []; // Array of arrays: visualLineBalls[column] = [true, true, false, ...] for each ball
+
+        function openVisualLine() {
+            const popup = document.getElementById('visualLinePopup');
+            popup.classList.add('visible');
+            // Position popup at a good starting location (right side of screen)
+            if (!popup.style.left || popup.style.left === 'auto') {
+                popup.style.left = (window.innerWidth - 500) + 'px';
+                popup.style.top = '100px';
+            }
+            document.getElementById('visualLineBtn').classList.add('active');
+            createVisualLine();
+            initDraggable('visualLinePopup', 'visualLinePopupHeader');
+            initResizable('visualLinePopup', 'visualLineResizeHandle');
+        }
+
+        function closeVisualLine() {
+            document.getElementById('visualLinePopup').classList.remove('visible');
+            document.getElementById('visualLineBtn').classList.remove('active');
+            document.getElementById('answerInput').focus();
+        }
+
+        function createVisualLine() {
+            const squaresContainer = document.getElementById('visualLineSquares');
+            const numbersContainer = document.getElementById('visualLineNumbers');
+            const ballsContainer = document.getElementById('visualLineBalls');
+
+            squaresContainer.innerHTML = '';
+            numbersContainer.innerHTML = '';
+            ballsContainer.innerHTML = '';
+
+            // Initialize balls state: each column has balls equal to its number
+            visualLineBalls = [];
+
+            // Create 11 columns (0-10)
+            for (let i = 0; i <= 10; i++) {
+                // Create square (skip for 0)
+                if (i > 0) {
+                    const square = document.createElement('div');
+                    square.className = 'visual-line-square ' + (i <= 5 ? 'red' : 'white');
+                    squaresContainer.appendChild(square);
+                }
+
+                // Create number
+                const number = document.createElement('div');
+                number.className = 'visual-line-number' + (i === 0 || i === 5 || i === 10 ? ' bold' : '');
+                number.textContent = i;
+                if (i === 0) {
+                    number.style.marginRight = '0px';
+                    number.style.width = '25px';
+                }
+                numbersContainer.appendChild(number);
+
+                // Create column for balls
+                const column = document.createElement('div');
+                column.className = 'visual-line-column';
+                if (i === 0) {
+                    column.style.width = '25px';
+                }
+                column.dataset.column = i;
+
+                // Initialize balls for this column (all visible)
+                visualLineBalls[i] = [];
+
+                // Create balls for this column
+                for (let j = 0; j < i; j++) {
+                    visualLineBalls[i][j] = true;
+                    const ball = document.createElement('div');
+                    ball.className = 'visual-ball';
+                    ball.dataset.column = i;
+                    ball.dataset.ball = j;
+                    ball.addEventListener('click', () => removeBall(i, j));
+                    ball.addEventListener('dblclick', () => restoreBall(i, j));
+                    column.appendChild(ball);
+                }
+
+                ballsContainer.appendChild(column);
+            }
+
+        }
+
+        function removeBall(column, ballIndex) {
+            if (!visualLineBalls[column][ballIndex]) return; // Already removed
+
+            visualLineBalls[column][ballIndex] = false;
+            const ball = document.querySelector(`.visual-ball[data-column="${column}"][data-ball="${ballIndex}"]`);
+            if (ball) {
+                ball.classList.add('removed');
+            }
+        }
+
+        function restoreBall(column, ballIndex) {
+            if (visualLineBalls[column][ballIndex]) return; // Already visible
+
+            visualLineBalls[column][ballIndex] = true;
+            const ball = document.querySelector(`.visual-ball[data-column="${column}"][data-ball="${ballIndex}"]`);
+            if (ball) {
+                ball.classList.remove('removed');
+            }
+        }
+
+        // Number Keypad functions
+        function keypadInput(num) {
+            if (gameState.answered || waitingForOperator) return;
+
+            const input = document.getElementById('answerInput');
+            const currentValue = input.value;
+
+            // If num is 10, just set the value to 10
+            if (num === 10) {
+                input.value = '10';
+            } else {
+                // Append the digit
+                input.value = currentValue + num.toString();
+            }
+
+            // Trigger input event for auto-check
+            input.dispatchEvent(new Event('input'));
+        }
+
+        function keypadClear() {
+            const input = document.getElementById('answerInput');
+            // Remove last character
+            input.value = input.value.slice(0, -1);
+        }
+
+        // Operator question state
+        let waitingForOperator = false;
+
+        function showOperatorQuestion() {
+            waitingForOperator = true;
+            document.getElementById('operatorQuestion').classList.add('visible');
+            document.getElementById('operatorFeedback').textContent = '';
+            document.getElementById('btnPlus').className = 'operator-btn';
+            document.getElementById('btnMinus').className = 'operator-btn';
+            document.getElementById('answerInput').disabled = true;
+        }
+
+        function hideOperatorQuestion() {
+            waitingForOperator = false;
+            document.getElementById('operatorQuestion').classList.remove('visible');
+            document.getElementById('answerInput').disabled = false;
+        }
+
+        function checkOperator(selectedOp) {
+            const q = gameState.questions[gameState.currentIndex];
+            const correctOp = q.operator;
+            const feedback = document.getElementById('operatorFeedback');
+            const btnPlus = document.getElementById('btnPlus');
+            const btnMinus = document.getElementById('btnMinus');
+
+            if (selectedOp === correctOp) {
+                // Correct!
+                if (selectedOp === '+') {
+                    btnPlus.className = 'operator-btn correct-choice';
+                } else {
+                    btnMinus.className = 'operator-btn correct-choice';
+                }
+                feedback.textContent = '✅ Goed! Dit is een ' + (correctOp === '+' ? 'PLUS (meer)' : 'MIN (minder)') + ' som!';
+                feedback.style.color = '#11998e';
+
+                // Allow retry after short delay
+                setTimeout(() => {
+                    hideOperatorQuestion();
+                    document.getElementById('answerInput').value = '';
+                    document.getElementById('answerInput').focus();
+                    document.getElementById('feedback').textContent = '🔄 Probeer de som opnieuw!';
+                    document.getElementById('feedback').className = 'feedback';
+                }, 1500);
+            } else {
+                // Wrong!
+                if (selectedOp === '+') {
+                    btnPlus.className = 'operator-btn wrong-choice';
+                } else {
+                    btnMinus.className = 'operator-btn wrong-choice';
+                }
+                feedback.textContent = '❌ Nee, kijk nog eens goed naar het teken in de som!';
+                feedback.style.color = '#ff6b6b';
+
+                // Reset button after animation
+                setTimeout(() => {
+                    btnPlus.className = 'operator-btn';
+                    btnMinus.className = 'operator-btn';
+                }, 600);
+            }
+        }
+
+        function showNumberlineForHelp() {
+            if (!numberlineVisible) {
+                numberlineVisible = true;
+                document.getElementById('numberlineContainer').classList.add('visible');
+                document.getElementById('numberlineBtn').classList.add('active');
+                createNumberline();
+            }
+        }
+
+        function createNumberline() {
+            const numberline = document.getElementById('numberline');
+            numberline.innerHTML = '';
+
+            const q = gameState.questions[gameState.currentIndex];
+            const maxNum = Math.max(settings.range, q.num1, q.answer) + 2;
+            const minNum = 0;
+
+            for (let i = minNum; i <= maxNum; i++) {
+                // Add line segment before number (except first)
+                if (i > minNum) {
+                    const line = document.createElement('div');
+                    line.className = 'numberline-line';
+                    numberline.appendChild(line);
+                }
+
+                const item = document.createElement('div');
+                item.className = 'numberline-item';
+
+                // Highlight the first number in the sum
+                if (i === q.num1) {
+                    const highlight = document.createElement('div');
+                    highlight.className = 'numberline-highlight';
+                    highlight.textContent = i;
+                    item.appendChild(highlight);
+                } else {
+                    const tick = document.createElement('div');
+                    tick.className = 'numberline-tick';
+                    item.appendChild(tick);
+
+                    const num = document.createElement('div');
+                    num.className = 'numberline-number';
+                    num.textContent = i;
+                    item.appendChild(num);
+                }
+
+                numberline.appendChild(item);
+            }
+        }
+
+        function hideRandomPiece() {
+            if (puzzleState.revealedPieces.length === 0) return;
+
+            // Pick a random revealed piece to hide
+            const randomIndex = Math.floor(Math.random() * puzzleState.revealedPieces.length);
+            const pieceIndex = puzzleState.revealedPieces[randomIndex];
+
+            // Remove from revealed pieces
+            puzzleState.revealedPieces.splice(randomIndex, 1);
+
+            // Animate and hide the piece
+            const piece = document.querySelector(`#puzzleGrid .puzzle-piece[data-index="${pieceIndex}"]`);
+            if (piece) {
+                piece.classList.add('hiding');
+                setTimeout(() => {
+                    piece.classList.remove('revealed');
+                    piece.classList.remove('hiding');
+                }, 600);
+            }
+
+            updatePuzzleProgress();
+        }
+
+        function getSettings() {
+            const rangeBtn = document.querySelector('#rangeButtons .selected');
+            const levelBtn = document.querySelector('#levelButtons .selected');
+            const countBtn = document.querySelector('#countButtons .selected');
+
+            settings.range = parseInt(rangeBtn.dataset.range);
+            settings.level = levelBtn.dataset.level === 'mix' ? 'mix' : parseInt(levelBtn.dataset.level);
+            settings.count = parseInt(countBtn.dataset.count);
+        }
+
+        function generateQuestions() {
+            const questions = [];
+
+            for (let i = 0; i < settings.count; i++) {
+                let level = settings.level;
+                if (settings.level === 'mix') {
+                    const levels = [1, 2, 3, 5, 10];
+                    level = levels[Math.floor(Math.random() * levels.length)];
+                }
+
+                const isAddition = Math.random() > 0.5;
+                let num1, num2, answer;
+
+                if (isAddition) {
+                    // Voor optellen: zorg dat het antwoord niet groter is dan het bereik
+                    num2 = level;
+                    num1 = Math.floor(Math.random() * (settings.range - level)) + 1;
+                    answer = num1 + num2;
+                } else {
+                    // Voor aftrekken: zorg dat het antwoord niet negatief wordt
+                    num2 = level;
+                    num1 = Math.floor(Math.random() * (settings.range - level)) + level + 1;
+                    answer = num1 - num2;
+                }
+
+                questions.push({
+                    num1: num1,
+                    num2: num2,
+                    operator: isAddition ? '+' : '-',
+                    answer: answer
+                });
+            }
+
+            return questions;
+        }
+
+        function startGame() {
+            getSettings();
+
+            gameState = {
+                questions: generateQuestions(),
+                currentIndex: 0,
+                correct: 0,
+                incorrect: 0,
+                answered: false
+            };
+
+            // Initialize puzzle
+            puzzleState = {
+                gridSize: calculateGridSize(settings.count),
+                revealedPieces: [],
+                totalPieces: 0
+            };
+
+            document.getElementById('totalQuestions').textContent = settings.count;
+            document.getElementById('settingsScreen').style.display = 'none';
+            document.getElementById('flashcardScreen').style.display = 'block';
+            document.getElementById('resultsScreen').style.display = 'none';
+
+            // Reset number line
+            numberlineVisible = false;
+            document.getElementById('numberlineContainer').classList.remove('visible');
+            document.getElementById('numberlineBtn').classList.remove('active');
+
+            // Reset abacus popup
+            document.getElementById('abacusPopup').classList.remove('visible');
+            document.getElementById('abacusBtn').classList.remove('active');
+
+            // Reset operator question
+            hideOperatorQuestion();
+
+            createPuzzleGrid('puzzleGrid');
+            updatePuzzleProgress();
+
+            showQuestion();
+            sendStateToMonitor();
+        }
+
+        function showQuestion() {
+            const q = gameState.questions[gameState.currentIndex];
+            document.getElementById('sumDisplay').textContent = `${q.num1} ${q.operator} ${q.num2} = `;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').focus();
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('currentQuestion').textContent = gameState.currentIndex + 1;
+            document.getElementById('correctScore').textContent = gameState.correct;
+            document.getElementById('incorrectScore').textContent = gameState.incorrect;
+            gameState.answered = false;
+
+            // Update progress bar
+            const progress = (gameState.currentIndex / settings.count) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            // Update number line if visible
+            if (numberlineVisible) {
+                createNumberline();
+            }
+
+            // Hide operator question if shown
+            hideOperatorQuestion();
+
+            // Enable answer input
+            document.getElementById('answerInput').disabled = false;
+
+            // Highlight current sum direction
+            const minusHint = document.getElementById('minusHint');
+            const plusHint = document.getElementById('plusHint');
+            if (q.operator === '-') {
+                minusHint.classList.add('active');
+                plusHint.classList.remove('active');
+            } else {
+                plusHint.classList.add('active');
+                minusHint.classList.remove('active');
+            }
+
+            // Update monitor
+            sendStateToMonitor();
+        }
+
+        function checkAnswer() {
+            if (gameState.answered) {
+                nextQuestion();
+                return;
+            }
+
+            const input = document.getElementById('answerInput');
+            const userAnswer = parseInt(input.value);
+            const correctAnswer = gameState.questions[gameState.currentIndex].answer;
+            const feedback = document.getElementById('feedback');
+            const flashcard = document.getElementById('flashcard');
+
+            if (isNaN(userAnswer)) {
+                feedback.textContent = '🤔 Vul een getal in!';
+                feedback.className = 'feedback';
+                return;
+            }
+
+            if (userAnswer === correctAnswer) {
+                // Correct answer!
+                gameState.answered = true;
+                gameState.correct++;
+                feedback.textContent = getRandomPositiveFeedback();
+                feedback.className = 'feedback correct';
+                flashcard.classList.add('bounce');
+                setTimeout(() => flashcard.classList.remove('bounce'), 500);
+                // Update puzzle based on correct percentage
+                updatePuzzleByPercentage();
+                document.getElementById('correctScore').textContent = gameState.correct;
+
+                // Notify monitor
+                sendAnswerEvent(true, userAnswer, correctAnswer);
+                sendStateToMonitor();
+
+                // Auto-advance to next question after short delay
+                setTimeout(() => {
+                    nextQuestion();
+                }, 800);
+            } else {
+                // Wrong answer - show help
+                gameState.incorrect++;
+                feedback.textContent = '😢 Helaas!';
+                feedback.className = 'feedback incorrect';
+                flashcard.classList.add('shake');
+                setTimeout(() => flashcard.classList.remove('shake'), 500);
+                // Update puzzle based on correct percentage
+                updatePuzzleByPercentage();
+                document.getElementById('incorrectScore').textContent = gameState.incorrect;
+
+                // Notify monitor
+                sendAnswerEvent(false, userAnswer, correctAnswer);
+                sendStateToMonitor();
+
+                // Show numberline automatically
+                showNumberlineForHelp();
+
+                // Show operator question - student must answer before retry
+                setTimeout(() => {
+                    showOperatorQuestion();
+                }, 600);
+            }
+        }
+
+        function nextQuestion() {
+            gameState.currentIndex++;
+
+            if (gameState.currentIndex >= gameState.questions.length) {
+                showResults();
+            } else {
+                showQuestion();
+            }
+        }
+
+        
+        function showResults() {
+            document.getElementById('flashcardScreen').style.display = 'none';
+            document.getElementById('resultsScreen').style.display = 'block';
+
+            // Show final puzzle state (reveal all pieces user earned)
+            createPuzzleGrid('puzzleGridFinal', false);
+
+            const percentage = (gameState.correct / settings.count) * 100;
+            let emoji, text, stars;
+
+            if (percentage === 100) {
+                emoji = '🏆';
+                text = 'PERFECT! Je bent een rekenkampioen!';
+                stars = '⭐⭐⭐⭐⭐';
+            } else if (percentage >= 80) {
+                emoji = '🌟';
+                text = 'Super goed gedaan!';
+                stars = '⭐⭐⭐⭐';
+            } else if (percentage >= 60) {
+                emoji = '😊';
+                text = 'Goed gedaan! Blijf oefenen!';
+                stars = '⭐⭐⭐';
+            } else if (percentage >= 40) {
+                emoji = '💪';
+                text = 'Je kunt het! Probeer nog een keer!';
+                stars = '⭐⭐';
+            } else {
+                emoji = '📚';
+                text = 'Blijf oefenen, dan wordt je steeds beter!';
+                stars = '⭐';
+            }
+
+            document.getElementById('resultsEmoji').textContent = emoji;
+            document.getElementById('resultsText').textContent = text;
+            document.getElementById('starRating').textContent = stars;
+            document.getElementById('finalScore').textContent = `${gameState.correct}/${settings.count} goed!`;
+
+            // Update progress bar to 100%
+            document.getElementById('progressBar').style.width = '100%';
+
+            // Notify monitor of results
+            sendStateToMonitor();
+        }
+
+        function playAgain() {
+            startGame();
+        }
+
+        function backToSettings() {
+            document.getElementById('settingsScreen').style.display = 'block';
+            document.getElementById('flashcardScreen').style.display = 'none';
+            document.getElementById('resultsScreen').style.display = 'none';
+        }
+
+        function getRandomPositiveFeedback() {
+            const messages = [
+                '🎉 Super!',
+                '✨ Geweldig!',
+                '👏 Goed zo!',
+                '🌟 Fantastisch!',
+                '💪 Knap hoor!',
+                '🎊 Helemaal goed!',
+                '🏆 Uitstekend!',
+                '👍 Top!',
+                '🚀 Wauw!',
+                '😎 Cool!'
+            ];
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+    </script>
+
+    <!-- Teacher Message Overlay -->
+    <div class="teacher-message-overlay" id="teacherOverlay" onclick="this.classList.remove('visible')">
+        <div class="teacher-message" id="teacherMessage"></div>
+    </div>
+
+    <style>
+        .teacher-message-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .teacher-message-overlay.visible {
+            display: flex;
+        }
+        .teacher-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 3rem;
+            padding: 50px 80px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            text-align: center;
+            animation: messagePopIn 0.5s ease;
+            max-width: 80%;
+        }
+        @keyframes messagePopIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Only connect if socket.io is available (server mode)
+        let socket = null;
+        if (typeof io !== 'undefined') {
+            console.log('Socket.io loaded, connecting...');
+            socket = io();
+
+            socket.on('connect', () => {
+                console.log('Connected to server:', socket.id);
+            });
+
+            socket.on('show-message', (msg) => {
+                console.log('Received message:', msg);
+                document.getElementById('teacherMessage').textContent = msg;
+                document.getElementById('teacherOverlay').classList.add('visible');
+            });
+
+            socket.on('hide-message', () => {
+                console.log('Hiding message');
+                document.getElementById('teacherOverlay').classList.remove('visible');
+            });
+
+            socket.on('start-game', () => {
+                console.log('Teacher started the game');
+                try {
+                    startGame();
+                    console.log('Game started successfully');
+                } catch (err) {
+                    console.error('Error starting game:', err);
+                    alert('Fout bij starten: ' + err.message);
+                }
+            });
+
+            socket.on('numberline-setting', (enabled) => {
+                console.log('Numberline setting:', enabled);
+                numberlineEnabled = enabled;
+                const btn = document.getElementById('numberlineBtn');
+                if (btn) {
+                    btn.style.display = enabled ? 'inline-block' : 'none';
+                }
+                // Close numberline if it's open and gets disabled
+                if (!enabled && numberlineVisible) {
+                    toggleNumberline();
+                }
+            });
+
+            socket.on('telraam-setting', (enabled) => {
+                console.log('Telraam setting:', enabled);
+                telraamEnabled = enabled;
+                const btn = document.getElementById('abacusBtn');
+                if (btn) {
+                    btn.style.display = enabled ? 'inline-block' : 'none';
+                }
+                // Close telraam if it's open and gets disabled
+                if (!enabled) {
+                    closeAbacusPopup();
+                }
+            });
+
+            socket.on('direction-hints-setting', (enabled) => {
+                console.log('Direction hints setting:', enabled);
+                directionHintsEnabled = enabled;
+                const hints = document.querySelector('.sum-direction-hints');
+                if (hints) {
+                    hints.style.display = enabled ? 'flex' : 'none';
+                }
+            });
+
+            socket.on('set-photo', (photoName) => {
+                console.log('Setting photo to:', photoName);
+                currentPuzzleImage = '/photos/' + photoName;
+                // Update puzzle if game is running
+                if (document.getElementById('flashcardScreen').style.display === 'block') {
+                    createPuzzleGrid('puzzleGrid');
+                }
+            });
+
+            socket.on('restart-game', () => {
+                console.log('Restarting game with new sums');
+                startGame();
+            });
+
+            // Kiosk mode: Teacher starts game with specific settings
+            socket.on('kiosk-game-start', (kioskSettings) => {
+                console.log('Kiosk game start with settings:', kioskSettings);
+
+                // Apply the settings from teacher
+                settings.range = kioskSettings.range;
+                settings.level = kioskSettings.level;
+                settings.count = kioskSettings.count;
+
+                // Update the UI buttons to reflect new settings
+                document.querySelectorAll('#rangeButtons .option-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                    if (parseInt(btn.dataset.range) === settings.range) btn.classList.add('selected');
+                });
+                document.querySelectorAll('#levelButtons .option-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                    if (btn.dataset.level === String(settings.level)) btn.classList.add('selected');
+                });
+                document.querySelectorAll('#countButtons .option-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                    if (parseInt(btn.dataset.count) === settings.count) btn.classList.add('selected');
+                });
+
+                // Start the game
+                startGame();
+            });
+
+            socket.on('refresh-page', () => {
+                console.log('Refreshing page');
+                location.reload();
+            });
+        } else {
+            console.log('Socket.io not available');
+        }
+
+        // Send state updates to monitors
+        function sendStateToMonitor() {
+            if (!socket) return;
+            const q = gameState.questions[gameState.currentIndex];
+            socket.emit('student-state', {
+                screen: document.getElementById('flashcardScreen').style.display === 'block' ? 'game' :
+                        document.getElementById('resultsScreen').style.display === 'block' ? 'results' : 'settings',
+                question: q ? `${q.num1} ${q.operator} ${q.num2} = ?` : null,
+                questionIndex: gameState.currentIndex + 1,
+                totalQuestions: settings.count,
+                correct: gameState.correct,
+                incorrect: gameState.incorrect,
+                puzzlePieces: puzzleState.revealedPieces.length,
+                totalPieces: puzzleState.totalPieces
+            });
+        }
+
+        function sendAnswerEvent(isCorrect, userAnswer, correctAnswer) {
+            if (!socket) return;
+            const q = gameState.questions[gameState.currentIndex];
+            socket.emit('student-answer', {
+                question: `${q.num1} ${q.operator} ${q.num2}`,
+                userAnswer: userAnswer,
+                correctAnswer: correctAnswer,
+                isCorrect: isCorrect
+            });
+        }
+
+        // iPad Connect Modal Functions
+        function showConnectModal() {
+            const modal = document.getElementById('connectModal');
+            modal.classList.add('show');
+            generateConnectQR();
+        }
+
+        function hideConnectModal() {
+            const modal = document.getElementById('connectModal');
+            modal.classList.remove('show');
+        }
+
+        function generateConnectQR() {
+            const host = window.location.hostname || 'localhost';
+            const port = window.location.port || '8080';
+            const connectUrl = `http://${host}:${port}/`;
+
+            document.getElementById('connectUrl').textContent = connectUrl;
+
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(connectUrl)}`;
+            document.getElementById('connectQrImage').src = qrApiUrl;
+        }
+
+        function copyConnectUrl() {
+            const url = document.getElementById('connectUrl').textContent;
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = event.target;
+                btn.textContent = '✅ Gekopieerd!';
+                setTimeout(() => {
+                    btn.textContent = '📋 Kopieer Link';
+                }, 2000);
+            });
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('connectModal');
+            if (e.target === modal) {
+                hideConnectModal();
+            }
+        });
+    </script>
+
+    <!-- iPad Connect Modal -->
+    <div class="connect-modal" id="connectModal">
+        <div class="connect-modal-content">
+            <h2>📱 iPad Verbinden</h2>
+            <p>Scan de QR-code met de iPad camera:</p>
+            <div class="qr-code">
+                <img id="connectQrImage" src="" alt="QR Code" width="200" height="200">
+            </div>
+            <div class="connect-url" id="connectUrl">Laden...</div>
+            <div>
+                <button class="copy-btn" onclick="copyConnectUrl()">📋 Kopieer Link</button>
+                <button class="close-btn" onclick="hideConnectModal()">✕ Sluiten</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

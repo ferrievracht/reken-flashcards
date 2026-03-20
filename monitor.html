@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Monitor - Reken Flashcards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .control-btn:first-child {
+            background: #667eea;
+            color: white;
+        }
+
+        .toggle-btn {
+            background: #11998e;
+            color: white;
+        }
+
+        .toggle-btn.off {
+            background: #dc3545;
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .status {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #11998e;
+        }
+
+        .status-dot.waiting {
+            background: #ffa500;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .waiting-screen {
+            padding: 40px 0;
+        }
+
+        .waiting-emoji {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .waiting-text {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .game-screen {
+            display: none;
+        }
+
+        .question-display {
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+        }
+
+        .question-text {
+            font-size: 3rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px 25px;
+            border-radius: 15px;
+            min-width: 80px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .stat-value.correct {
+            color: #11998e;
+        }
+
+        .stat-value.incorrect {
+            color: #ff6b6b;
+        }
+
+        .stat-value.progress {
+            color: #764ba2;
+        }
+
+        .progress-bar-container {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .feedback-area {
+            min-height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .feedback-message {
+            font-size: 1.5rem;
+            padding: 15px 30px;
+            border-radius: 15px;
+            animation: feedbackIn 0.3s ease;
+        }
+
+        @keyframes feedbackIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .feedback-message.correct {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .feedback-message.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .results-screen {
+            display: none;
+        }
+
+        .results-emoji {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+
+        .results-score {
+            font-size: 2.5rem;
+            color: #764ba2;
+            margin-bottom: 10px;
+        }
+
+        .star-rating {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .puzzle-info {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .answer-history {
+            margin-top: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 8px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .history-item.correct {
+            background: #d4edda;
+            border-left: 4px solid #11998e;
+        }
+
+        .history-item.incorrect {
+            background: #f8d7da;
+            border-left: 4px solid #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <button class="control-btn" onclick="window.location.href='/leraar'">⬅️ Leraar</button>
+            <h1>Live Monitor</h1>
+            <div style="width: 100px;"></div>
+        </div>
+
+        <div class="controls-row">
+            <button class="control-btn toggle-btn" id="numberlineBtn" onclick="toggleNumberline()">📏 Lijn Aan</button>
+            <button class="control-btn toggle-btn" id="telraamBtn" onclick="toggleTelraam()">🧮 Telraam Aan</button>
+            <button class="control-btn toggle-btn" id="directionBtn" onclick="toggleDirection()">⬅️➡️ Hints Aan</button>
+        </div>
+
+        <div class="status" id="status">
+            <span class="status-dot waiting" id="statusDot"></span>
+            <span id="statusText">Verbinden...</span>
+        </div>
+
+        <!-- Waiting Screen -->
+        <div class="waiting-screen" id="waitingScreen">
+            <div class="waiting-emoji">👀</div>
+            <div class="waiting-text">Wachten op de leerling...</div>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-screen" id="gameScreen">
+            <div class="question-display">
+                <div class="question-text" id="questionText">5 + 3 = ?</div>
+            </div>
+
+            <div class="progress-info">
+                <div class="stat-box">
+                    <div class="stat-label">Goed</div>
+                    <div class="stat-value correct" id="correctCount">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Vraag</div>
+                    <div class="stat-value progress" id="questionProgress">1/10</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Fout</div>
+                    <div class="stat-value incorrect" id="incorrectCount">0</div>
+                </div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+
+            <div class="puzzle-info" id="puzzleInfo">
+                Puzzelstukjes: 0
+            </div>
+
+            <div class="feedback-area" id="feedbackArea"></div>
+
+            <div class="answer-history" id="answerHistory"></div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="results-screen" id="resultsScreen">
+            <div class="results-emoji" id="resultsEmoji">🏆</div>
+            <div class="star-rating" id="starRating">⭐⭐⭐</div>
+            <div class="results-score" id="resultsScore">8/10 goed!</div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let answerHistory = [];
+        let numberlineEnabled = true;
+        let telraamEnabled = true;
+        let directionEnabled = true;
+
+        function toggleNumberline() {
+            numberlineEnabled = !numberlineEnabled;
+            socket.emit('toggle-numberline', numberlineEnabled);
+            updateNumberlineButton();
+        }
+
+        function updateNumberlineButton() {
+            const btn = document.getElementById('numberlineBtn');
+            if (numberlineEnabled) {
+                btn.textContent = '📏 Lijn Aan';
+                btn.classList.remove('off');
+            } else {
+                btn.textContent = '📏 Lijn Uit';
+                btn.classList.add('off');
+            }
+        }
+
+        function toggleTelraam() {
+            telraamEnabled = !telraamEnabled;
+            socket.emit('toggle-telraam', telraamEnabled);
+            updateTelraamButton();
+        }
+
+        function updateTelraamButton() {
+            const btn = document.getElementById('telraamBtn');
+            if (telraamEnabled) {
+                btn.textContent = '🧮 Telraam Aan';
+                btn.classList.remove('off');
+            } else {
+                btn.textContent = '🧮 Telraam Uit';
+                btn.classList.add('off');
+            }
+        }
+
+        function toggleDirection() {
+            directionEnabled = !directionEnabled;
+            socket.emit('toggle-direction-hints', directionEnabled);
+            updateDirectionButton();
+        }
+
+        function updateDirectionButton() {
+            const btn = document.getElementById('directionBtn');
+            if (directionEnabled) {
+                btn.textContent = '⬅️➡️ Hints Aan';
+                btn.classList.remove('off');
+            } else {
+                btn.textContent = '⬅️➡️ Hints Uit';
+                btn.classList.add('off');
+            }
+        }
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            document.getElementById('statusDot').className = 'status-dot connected';
+            document.getElementById('statusText').textContent = 'Verbonden - wachten op activiteit';
+        });
+
+        socket.on('disconnect', () => {
+            document.getElementById('statusDot').className = 'status-dot waiting';
+            document.getElementById('statusText').textContent = 'Verbinding verbroken...';
+        });
+
+        socket.on('game-state', (state) => {
+            console.log('Received state:', state);
+            updateDisplay(state);
+        });
+
+        socket.on('answer-event', (data) => {
+            console.log('Answer event:', data);
+            showFeedback(data);
+            addToHistory(data);
+        });
+
+        socket.on('numberline-setting', (enabled) => {
+            numberlineEnabled = enabled;
+            updateNumberlineButton();
+        });
+
+        socket.on('telraam-setting', (enabled) => {
+            telraamEnabled = enabled;
+            updateTelraamButton();
+        });
+
+        socket.on('direction-hints-setting', (enabled) => {
+            directionEnabled = enabled;
+            updateDirectionButton();
+        });
+
+        function updateDisplay(state) {
+            document.getElementById('statusText').textContent = 'Live meekijken';
+
+            if (state.screen === 'settings') {
+                document.getElementById('waitingScreen').style.display = 'block';
+                document.getElementById('gameScreen').style.display = 'none';
+                document.getElementById('resultsScreen').style.display = 'none';
+                document.getElementById('waitingScreen').innerHTML = `
+                    <div class="waiting-emoji">⚙️</div>
+                    <div class="waiting-text">Leerling kiest instellingen...</div>
+                `;
+            } else if (state.screen === 'game') {
+                document.getElementById('waitingScreen').style.display = 'none';
+                document.getElementById('gameScreen').style.display = 'block';
+                document.getElementById('resultsScreen').style.display = 'none';
+
+                document.getElementById('questionText').textContent = state.question || '...';
+                document.getElementById('correctCount').textContent = state.correct;
+                document.getElementById('incorrectCount').textContent = state.incorrect;
+                document.getElementById('questionProgress').textContent = `${state.questionIndex}/${state.totalQuestions}`;
+
+                const progress = ((state.questionIndex - 1) / state.totalQuestions) * 100;
+                document.getElementById('progressBar').style.width = progress + '%';
+
+                document.getElementById('puzzleInfo').textContent =
+                    `Puzzelstukjes: ${state.puzzlePieces} / ${state.totalPieces}`;
+            } else if (state.screen === 'results') {
+                document.getElementById('waitingScreen').style.display = 'none';
+                document.getElementById('gameScreen').style.display = 'none';
+                document.getElementById('resultsScreen').style.display = 'block';
+
+                const percentage = (state.correct / state.totalQuestions) * 100;
+                let emoji, stars;
+
+                if (percentage === 100) {
+                    emoji = '🏆'; stars = '⭐⭐⭐⭐⭐';
+                } else if (percentage >= 80) {
+                    emoji = '🌟'; stars = '⭐⭐⭐⭐';
+                } else if (percentage >= 60) {
+                    emoji = '😊'; stars = '⭐⭐⭐';
+                } else if (percentage >= 40) {
+                    emoji = '💪'; stars = '⭐⭐';
+                } else {
+                    emoji = '📚'; stars = '⭐';
+                }
+
+                document.getElementById('resultsEmoji').textContent = emoji;
+                document.getElementById('starRating').textContent = stars;
+                document.getElementById('resultsScore').textContent = `${state.correct}/${state.totalQuestions} goed!`;
+            }
+        }
+
+        function showFeedback(data) {
+            const feedbackArea = document.getElementById('feedbackArea');
+            const message = document.createElement('div');
+            message.className = 'feedback-message ' + (data.isCorrect ? 'correct' : 'incorrect');
+
+            if (data.isCorrect) {
+                message.textContent = `✓ ${data.question} = ${data.correctAnswer}`;
+            } else {
+                message.textContent = `✗ ${data.question} = ${data.userAnswer} (was ${data.correctAnswer})`;
+            }
+
+            feedbackArea.innerHTML = '';
+            feedbackArea.appendChild(message);
+
+            // Clear after 3 seconds
+            setTimeout(() => {
+                if (feedbackArea.contains(message)) {
+                    message.style.opacity = '0';
+                    setTimeout(() => message.remove(), 300);
+                }
+            }, 3000);
+        }
+
+        function addToHistory(data) {
+            answerHistory.unshift(data);
+            if (answerHistory.length > 10) answerHistory.pop();
+
+            const historyContainer = document.getElementById('answerHistory');
+            historyContainer.innerHTML = '';
+
+            answerHistory.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item ' + (item.isCorrect ? 'correct' : 'incorrect');
+                div.textContent = item.isCorrect
+                    ? `✓ ${item.question} = ${item.correctAnswer}`
+                    : `✗ ${item.question}: antwoord ${item.userAnswer}, goed was ${item.correctAnswer}`;
+                historyContainer.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>

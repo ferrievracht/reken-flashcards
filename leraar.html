@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leraar - Reken Flashcards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #11998e;
+            margin-bottom: 30px;
+        }
+        .message-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5rem;
+            border: 3px solid #11998e;
+            border-radius: 15px;
+            font-family: inherit;
+            margin-bottom: 20px;
+        }
+        .message-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(17, 153, 142, 0.4);
+        }
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        .btn-send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-clear {
+            background: #ff6b6b;
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f0f0f0;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .sent-feedback {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            color: #11998e;
+            font-weight: bold;
+            min-height: 30px;
+        }
+        .btn-start {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            width: 100%;
+            padding: 20px;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        .btn-restart {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+        }
+        .btn-live {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        .btn-refresh {
+            background: #17a2b8;
+            color: white;
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+        .btn-random {
+            background: #ffa500;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+        }
+        .setting-row {
+            margin: 20px 0;
+            text-align: left;
+        }
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        .toggle-label input {
+            display: none;
+        }
+        .toggle-slider {
+            width: 50px;
+            height: 26px;
+            background: #ccc;
+            border-radius: 13px;
+            position: relative;
+            transition: background 0.3s;
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+        .toggle-label input:checked + .toggle-slider {
+            background: #11998e;
+        }
+        .toggle-label input:checked + .toggle-slider::before {
+            transform: translateX(24px);
+        }
+        .photo-select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #11998e;
+            border-radius: 10px;
+            font-family: inherit;
+            margin-bottom: 10px;
+        }
+        .photo-preview {
+            margin-top: 15px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .photo-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .qr-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            color: white;
+        }
+        .qr-section h2 {
+            color: white;
+            margin-bottom: 15px;
+        }
+        .qr-code {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        .qr-code img {
+            display: block;
+        }
+        .connect-url {
+            background: rgba(255,255,255,0.2);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-family: monospace;
+            margin-top: 15px;
+            word-break: break-all;
+        }
+        .copy-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        .copy-btn:hover {
+            background: #f0f0f0;
+        }
+
+        /* Kiosk Game Settings */
+        .kiosk-section {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            color: white;
+        }
+        .kiosk-section h2 {
+            color: white;
+            margin-bottom: 20px;
+        }
+        .kiosk-setting {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .kiosk-setting label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .kiosk-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .kiosk-btn {
+            padding: 10px 15px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .kiosk-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .kiosk-btn.selected {
+            background: white;
+            color: #11998e;
+        }
+        .kiosk-start-btn {
+            background: white;
+            color: #11998e;
+            border: none;
+            padding: 18px 40px;
+            font-size: 1.3rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 20px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .kiosk-start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .connected-ipads {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="qr-section">
+            <h2>📱 iPad Verbinden</h2>
+            <p>Scan deze QR-code met de iPad camera:</p>
+            <div class="qr-code" id="qrCode">
+                <img id="qrImage" src="" alt="QR Code" width="180" height="180">
+            </div>
+            <div class="connect-url" id="connectUrl">Laden...</div>
+            <button class="copy-btn" onclick="copyUrl()">📋 Kopieer Link</button>
+        </div>
+
+        <div class="kiosk-section">
+            <h2>🎮 Kiosk Modus - Game Starten</h2>
+
+            <div class="kiosk-setting">
+                <label>📊 Getallen tot:</label>
+                <div class="kiosk-buttons" id="kioskRange">
+                    <button class="kiosk-btn" data-value="5">1-5</button>
+                    <button class="kiosk-btn selected" data-value="10">1-10</button>
+                    <button class="kiosk-btn" data-value="15">1-15</button>
+                    <button class="kiosk-btn" data-value="20">1-20</button>
+                    <button class="kiosk-btn" data-value="50">1-50</button>
+                    <button class="kiosk-btn" data-value="100">1-100</button>
+                </div>
+            </div>
+
+            <div class="kiosk-setting">
+                <label>🎯 Niveau:</label>
+                <div class="kiosk-buttons" id="kioskLevel">
+                    <button class="kiosk-btn selected" data-value="1">+1/-1</button>
+                    <button class="kiosk-btn" data-value="2">+2/-2</button>
+                    <button class="kiosk-btn" data-value="3">+3/-3</button>
+                    <button class="kiosk-btn" data-value="5">+5/-5</button>
+                    <button class="kiosk-btn" data-value="10">+10/-10</button>
+                    <button class="kiosk-btn" data-value="mix">Mix!</button>
+                </div>
+            </div>
+
+            <div class="kiosk-setting">
+                <label>🔢 Aantal sommen:</label>
+                <div class="kiosk-buttons" id="kioskCount">
+                    <button class="kiosk-btn" data-value="5">5</button>
+                    <button class="kiosk-btn selected" data-value="10">10</button>
+                    <button class="kiosk-btn" data-value="15">15</button>
+                    <button class="kiosk-btn" data-value="20">20</button>
+                </div>
+            </div>
+
+            <button class="kiosk-start-btn" onclick="startKioskGame()">🚀 Start Game op iPad!</button>
+
+            <div class="connected-ipads" id="connectedIpads">
+                📱 Verbonden iPads: <span id="ipadCount">0</span>
+            </div>
+        </div>
+
+        <h1>Leraar Paneel</h1>
+        <input type="text" class="message-input" id="messageInput" placeholder="Type je bericht..." autofocus>
+        <div>
+            <button class="btn btn-send" onclick="sendMessage()">Verstuur</button>
+            <button class="btn btn-clear" onclick="clearMessage()">Wissen</button>
+        </div>
+
+        <hr style="margin: 25px 0; border: none; border-top: 2px solid #eee;">
+
+        <h2 style="color: #764ba2; margin-bottom: 15px;">App Besturing</h2>
+        <button class="btn btn-start" onclick="startApp()">🚀 Start App op iPad</button>
+        <button class="btn btn-restart" onclick="restartGame()">🔄 Nieuwe Sommen</button>
+        <button class="btn btn-live" onclick="window.open('/monitor', '_blank')">👀 Live Meekijken</button>
+        <button class="btn btn-refresh" onclick="refreshClients()">🔃 Ververs iPad</button>
+
+        <hr style="margin: 25px 0; border: none; border-top: 2px solid #eee;">
+
+        <h2 style="color: #764ba2; margin-bottom: 15px;">Instellingen</h2>
+
+        <div class="setting-row">
+            <label class="toggle-label">
+                <span>📏 Getallenlijn</span>
+                <input type="checkbox" id="numberlineToggle" checked onchange="toggleNumberline()">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="setting-row">
+            <label class="toggle-label">
+                <span>🧮 Telraam</span>
+                <input type="checkbox" id="telraamToggle" checked onchange="toggleTelraam()">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="setting-row">
+            <label class="toggle-label">
+                <span>⬅️➡️ Richting hints</span>
+                <input type="checkbox" id="directionToggle" checked onchange="toggleDirectionHints()">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="setting-row">
+            <label style="display: block; margin-bottom: 10px; font-weight: bold;">📷 Puzzel Foto:</label>
+            <select id="photoSelect" class="photo-select" onchange="changePhoto()">
+                <option value="">Laden...</option>
+            </select>
+            <button class="btn btn-random" onclick="randomPhoto()">🎲 Willekeurig</button>
+        </div>
+
+        <div class="photo-preview" id="photoPreview"></div>
+
+        <div class="sent-feedback" id="sentFeedback"></div>
+        <div class="status" id="status">Verbinden...</div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const input = document.getElementById('messageInput');
+        const status = document.getElementById('status');
+
+        socket.on('connect', () => {
+            status.textContent = 'Verbonden met ' + socket.id;
+            status.className = 'status connected';
+        });
+
+        socket.on('disconnect', () => {
+            status.textContent = 'Verbinding verbroken';
+            status.className = 'status disconnected';
+        });
+
+        function sendMessage() {
+            const msg = input.value.trim();
+            if (msg) {
+                socket.emit('teacher-message', msg);
+
+                // Show feedback
+                const feedback = document.getElementById('sentFeedback');
+                feedback.textContent = '✅ Verstuurd!';
+
+                // Clear input
+                input.value = '';
+                input.focus();
+
+                // Hide feedback after 2 seconds
+                setTimeout(() => {
+                    feedback.textContent = '';
+                }, 2000);
+            }
+        }
+
+        function clearMessage() {
+            socket.emit('clear-message');
+            input.value = '';
+        }
+
+        function startApp() {
+            socket.emit('start-app');
+            showFeedback('🚀 App gestart!');
+        }
+
+        function restartGame() {
+            socket.emit('restart-game');
+            showFeedback('🔄 Nieuwe sommen gegenereerd!');
+        }
+
+        function refreshClients() {
+            socket.emit('refresh-clients');
+            showFeedback('🔃 iPad wordt ververst!');
+        }
+
+        function toggleNumberline() {
+            const enabled = document.getElementById('numberlineToggle').checked;
+            socket.emit('toggle-numberline', enabled);
+            showFeedback(enabled ? '📏 Getallenlijn ingeschakeld' : '📏 Getallenlijn uitgeschakeld');
+        }
+
+        function toggleTelraam() {
+            const enabled = document.getElementById('telraamToggle').checked;
+            socket.emit('toggle-telraam', enabled);
+            showFeedback(enabled ? '🧮 Telraam ingeschakeld' : '🧮 Telraam uitgeschakeld');
+        }
+
+        function toggleDirectionHints() {
+            const enabled = document.getElementById('directionToggle').checked;
+            socket.emit('toggle-direction-hints', enabled);
+            showFeedback(enabled ? '⬅️➡️ Richting hints ingeschakeld' : '⬅️➡️ Richting hints uitgeschakeld');
+        }
+
+        function changePhoto() {
+            const select = document.getElementById('photoSelect');
+            const photo = select.value;
+            if (photo) {
+                socket.emit('change-photo', photo);
+                updatePhotoPreview(photo);
+                showFeedback('📷 Foto gewijzigd!');
+            }
+        }
+
+        function randomPhoto() {
+            const select = document.getElementById('photoSelect');
+            const options = Array.from(select.options).filter(o => o.value);
+            if (options.length > 0) {
+                const randomIndex = Math.floor(Math.random() * options.length);
+                select.selectedIndex = randomIndex + 1; // +1 because first option is placeholder
+                changePhoto();
+            }
+        }
+
+        function updatePhotoPreview(photo) {
+            const preview = document.getElementById('photoPreview');
+            preview.innerHTML = `<img src="/photos/${photo}" alt="Preview">`;
+        }
+
+        function showFeedback(message) {
+            const feedback = document.getElementById('sentFeedback');
+            feedback.textContent = message;
+            setTimeout(() => {
+                feedback.textContent = '';
+            }, 2000);
+        }
+
+        // Load available photos
+        async function loadPhotos() {
+            try {
+                const response = await fetch('/api/photos');
+                const photos = await response.json();
+                const select = document.getElementById('photoSelect');
+                select.innerHTML = '<option value="">-- Kies een foto --</option>';
+                photos.forEach(photo => {
+                    const option = document.createElement('option');
+                    option.value = photo;
+                    option.textContent = photo;
+                    select.appendChild(option);
+                });
+                // Select fee.jpg by default if available
+                const defaultPhoto = photos.find(p => p.toLowerCase().includes('fee')) || photos[0];
+                if (defaultPhoto) {
+                    select.value = defaultPhoto;
+                    updatePhotoPreview(defaultPhoto);
+                }
+            } catch (err) {
+                console.error('Error loading photos:', err);
+            }
+        }
+
+        // Load photos on page load
+        loadPhotos();
+
+        // Generate QR code for iPad connection
+        function generateQRCode() {
+            const host = window.location.hostname;
+            const port = window.location.port || '8080';
+            const connectUrl = `http://${host}:${port}/`;
+
+            document.getElementById('connectUrl').textContent = connectUrl;
+
+            // Use QR Server API to generate QR code
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(connectUrl)}`;
+            document.getElementById('qrImage').src = qrApiUrl;
+        }
+
+        function copyUrl() {
+            const url = document.getElementById('connectUrl').textContent;
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = event.target;
+                btn.textContent = '✅ Gekopieerd!';
+                setTimeout(() => {
+                    btn.textContent = '📋 Kopieer Link';
+                }, 2000);
+            });
+        }
+
+        // Generate QR code on page load
+        generateQRCode();
+
+        // Kiosk Mode Settings
+        let kioskSettings = {
+            range: 10,
+            level: 1,
+            count: 10
+        };
+
+        // Setup kiosk button handlers
+        function setupKioskButtons() {
+            document.querySelectorAll('#kioskRange .kiosk-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#kioskRange .kiosk-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    kioskSettings.range = parseInt(btn.dataset.value) || btn.dataset.value;
+                });
+            });
+
+            document.querySelectorAll('#kioskLevel .kiosk-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#kioskLevel .kiosk-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    kioskSettings.level = btn.dataset.value === 'mix' ? 'mix' : parseInt(btn.dataset.value);
+                });
+            });
+
+            document.querySelectorAll('#kioskCount .kiosk-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#kioskCount .kiosk-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    kioskSettings.count = parseInt(btn.dataset.value);
+                });
+            });
+        }
+
+        setupKioskButtons();
+
+        function startKioskGame() {
+            socket.emit('kiosk-start-game', kioskSettings);
+            showFeedback('🚀 Game gestart op alle iPads!');
+        }
+
+        // Track connected clients
+        socket.on('client-count', (count) => {
+            document.getElementById('ipadCount').textContent = count;
+        });
+
+        // Send on Enter key
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
