@@ -243,6 +243,22 @@
             box-shadow: 0 0 20px rgba(255,255,255,0.8);
         }
 
+        .splitsen-inputs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .splitsen-input {
+            width: 80px;
+            font-size: 2rem;
+        }
+
+        .splitsen-input.active-split {
+            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+            border-color: #38ef7d;
+        }
+
         /* Feedback */
         .feedback {
             font-size: 1.5rem;
@@ -1635,26 +1651,46 @@
 
             <div class="settings">
                 <div class="setting-group">
-                    <label class="setting-label">📊 Getallen tot:</label>
-                    <div class="button-group" id="rangeButtons">
-                        <button class="option-btn" data-range="5">1 - 5</button>
-                        <button class="option-btn selected" data-range="10">1 - 10</button>
-                        <button class="option-btn" data-range="15">1 - 15</button>
-                        <button class="option-btn" data-range="20">1 - 20</button>
-                        <button class="option-btn" data-range="50">1 - 50</button>
-                        <button class="option-btn" data-range="100">1 - 100</button>
+                    <label class="setting-label">🎮 Oefening:</label>
+                    <div class="button-group" id="modeButtons">
+                        <button class="option-btn selected" data-mode="rekenen">➕➖ Optellen / Aftrekken</button>
+                        <button class="option-btn" data-mode="splitsen">✂️ Splitsen</button>
                     </div>
                 </div>
 
-                <div class="setting-group">
-                    <label class="setting-label">🎯 Niveau (optellen/aftrekken met):</label>
-                    <div class="button-group" id="levelButtons">
-                        <button class="option-btn selected" data-level="1">+1 / -1</button>
-                        <button class="option-btn" data-level="2">+2 / -2</button>
-                        <button class="option-btn" data-level="3">+3 / -3</button>
-                        <button class="option-btn" data-level="5">+5 / -5</button>
-                        <button class="option-btn" data-level="10">+10 / -10</button>
-                        <button class="option-btn" data-level="mix">Mix!</button>
+                <div id="rekenenSettings">
+                    <div class="setting-group">
+                        <label class="setting-label">📊 Getallen tot:</label>
+                        <div class="button-group" id="rangeButtons">
+                            <button class="option-btn" data-range="5">1 - 5</button>
+                            <button class="option-btn selected" data-range="10">1 - 10</button>
+                            <button class="option-btn" data-range="15">1 - 15</button>
+                            <button class="option-btn" data-range="20">1 - 20</button>
+                            <button class="option-btn" data-range="50">1 - 50</button>
+                            <button class="option-btn" data-range="100">1 - 100</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <label class="setting-label">🎯 Niveau (optellen/aftrekken met):</label>
+                        <div class="button-group" id="levelButtons">
+                            <button class="option-btn selected" data-level="1">+1 / -1</button>
+                            <button class="option-btn" data-level="2">+2 / -2</button>
+                            <button class="option-btn" data-level="3">+3 / -3</button>
+                            <button class="option-btn" data-level="5">+5 / -5</button>
+                            <button class="option-btn" data-level="10">+10 / -10</button>
+                            <button class="option-btn" data-level="mix">Mix!</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="splitsenSettings" style="display: none;">
+                    <div class="setting-group">
+                        <label class="setting-label">📊 Splitsen tot en met:</label>
+                        <div class="button-group" id="splitsenRangeButtons">
+                            <button class="option-btn selected" data-splitrange="5">5</button>
+                            <button class="option-btn" data-splitrange="10">10</button>
+                        </div>
                     </div>
                 </div>
 
@@ -1707,6 +1743,11 @@
                     </div>
                     <div class="sum" id="sumDisplay">5 + 3 = </div>
                     <input type="number" class="answer-input" id="answerInput" autofocus>
+                    <div class="splitsen-inputs" id="splitsenInputs" style="display: none;">
+                        <input type="number" class="answer-input splitsen-input" id="splitInput1" placeholder="?">
+                        <span class="sum" style="margin: 0 5px; font-size: 2rem;">+</span>
+                        <input type="number" class="answer-input splitsen-input" id="splitInput2" placeholder="?">
+                    </div>
                 <div class="helper-buttons">
                     <button class="helper-btn" id="numberlineBtn" onclick="toggleNumberline()">📏 Getallenlijn</button>
                     <button class="helper-btn" id="abacusBtn" onclick="toggleAbacus()">🧮 Telraam</button>
@@ -1807,7 +1848,9 @@
         let settings = {
             range: 10,
             level: 1,
-            count: 10
+            count: 10,
+            mode: 'rekenen',
+            splitRange: 5
         };
 
         let gameState = {
@@ -1970,6 +2013,46 @@
                 }
             });
         });
+
+        // Mode toggle: show/hide settings sections
+        document.getElementById('modeButtons').addEventListener('click', (e) => {
+            if (!e.target.classList.contains('option-btn')) return;
+            const mode = e.target.dataset.mode;
+            document.getElementById('rekenenSettings').style.display = mode === 'rekenen' ? '' : 'none';
+            document.getElementById('splitsenSettings').style.display = mode === 'splitsen' ? '' : 'none';
+        });
+
+        // Handle Enter key for splitsen inputs
+        ['splitInput1', 'splitInput2'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !waitingForOperator) {
+                    if (!gameState.answered) {
+                        checkAnswer();
+                    } else {
+                        nextQuestion();
+                    }
+                }
+            });
+            document.getElementById(id).addEventListener('focus', () => {
+                activeSplitInput = id;
+                document.querySelectorAll('.splitsen-input').forEach(el => el.classList.remove('active-split'));
+                document.getElementById(id).classList.add('active-split');
+            });
+            document.getElementById(id).addEventListener('input', () => {
+                if (gameState.answered || waitingForOperator) return;
+                const v1 = document.getElementById('splitInput1').value;
+                const v2 = document.getElementById('splitInput2').value;
+                if (v1 !== '' && v2 !== '') {
+                    setTimeout(() => {
+                        if (!gameState.answered && !waitingForOperator) {
+                            checkAnswer();
+                        }
+                    }, 300);
+                }
+            });
+        });
+
+        let activeSplitInput = 'splitInput1';
 
         // Handle Enter key
         document.getElementById('answerInput').addEventListener('keypress', (e) => {
@@ -2432,7 +2515,15 @@
         function keypadInput(num) {
             if (gameState.answered || waitingForOperator) return;
 
-            const input = document.getElementById('answerInput');
+            const q = gameState.questions[gameState.currentIndex];
+            let input;
+
+            if (q && q.type === 'splitsen') {
+                input = document.getElementById(activeSplitInput);
+            } else {
+                input = document.getElementById('answerInput');
+            }
+
             const currentValue = input.value;
 
             // If num is 10, just set the value to 10
@@ -2445,10 +2536,25 @@
 
             // Trigger input event for auto-check
             input.dispatchEvent(new Event('input'));
+
+            // For splitsen: auto-move to second input after filling first
+            if (q && q.type === 'splitsen' && activeSplitInput === 'splitInput1' && input.value !== '') {
+                activeSplitInput = 'splitInput2';
+                document.querySelectorAll('.splitsen-input').forEach(el => el.classList.remove('active-split'));
+                document.getElementById('splitInput2').classList.add('active-split');
+                document.getElementById('splitInput2').focus();
+            }
         }
 
         function keypadClear() {
-            const input = document.getElementById('answerInput');
+            const q = gameState.questions && gameState.questions[gameState.currentIndex];
+            let input;
+
+            if (q && q.type === 'splitsen') {
+                input = document.getElementById(activeSplitInput);
+            } else {
+                input = document.getElementById('answerInput');
+            }
             // Remove last character
             input.value = input.value.slice(0, -1);
         }
@@ -2587,16 +2693,28 @@
         }
 
         function getSettings() {
-            const rangeBtn = document.querySelector('#rangeButtons .selected');
-            const levelBtn = document.querySelector('#levelButtons .selected');
+            const modeBtn = document.querySelector('#modeButtons .selected');
             const countBtn = document.querySelector('#countButtons .selected');
 
-            settings.range = parseInt(rangeBtn.dataset.range);
-            settings.level = levelBtn.dataset.level === 'mix' ? 'mix' : parseInt(levelBtn.dataset.level);
+            settings.mode = modeBtn.dataset.mode;
             settings.count = parseInt(countBtn.dataset.count);
+
+            if (settings.mode === 'rekenen') {
+                const rangeBtn = document.querySelector('#rangeButtons .selected');
+                const levelBtn = document.querySelector('#levelButtons .selected');
+                settings.range = parseInt(rangeBtn.dataset.range);
+                settings.level = levelBtn.dataset.level === 'mix' ? 'mix' : parseInt(levelBtn.dataset.level);
+            } else {
+                const splitBtn = document.querySelector('#splitsenRangeButtons .selected');
+                settings.splitRange = parseInt(splitBtn.dataset.splitrange);
+            }
         }
 
         function generateQuestions() {
+            if (settings.mode === 'splitsen') {
+                return generateSplitsenQuestions();
+            }
+
             const questions = [];
 
             for (let i = 0; i < settings.count; i++) {
@@ -2626,6 +2744,35 @@
                     num2: num2,
                     operator: isAddition ? '+' : '-',
                     answer: answer
+                });
+            }
+
+            return questions;
+        }
+
+        function generateSplitsenQuestions() {
+            const questions = [];
+            // Genereer alle mogelijke splitsingen voor getallen 2 t/m splitRange
+            const allSplits = [];
+            for (let total = 2; total <= settings.splitRange; total++) {
+                for (let a = 0; a <= total; a++) {
+                    allSplits.push({ total: total, part1: a, part2: total - a });
+                }
+            }
+
+            // Shuffle en selecteer het gewenste aantal
+            for (let i = allSplits.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [allSplits[i], allSplits[j]] = [allSplits[j], allSplits[i]];
+            }
+
+            for (let i = 0; i < settings.count; i++) {
+                const split = allSplits[i % allSplits.length];
+                questions.push({
+                    type: 'splitsen',
+                    total: split.total,
+                    part1: split.part1,
+                    part2: split.part2
                 });
             }
 
@@ -2667,6 +2814,10 @@
             // Reset operator question
             hideOperatorQuestion();
 
+            // Hide direction hints for splitsen
+            const dirHints = document.querySelector('.sum-direction-hints');
+            if (dirHints) dirHints.style.display = settings.mode === 'splitsen' ? 'none' : '';
+
             createPuzzleGrid('puzzleGrid');
             updatePuzzleProgress();
 
@@ -2676,9 +2827,25 @@
 
         function showQuestion() {
             const q = gameState.questions[gameState.currentIndex];
-            document.getElementById('sumDisplay').textContent = `${q.num1} ${q.operator} ${q.num2} = `;
-            document.getElementById('answerInput').value = '';
-            document.getElementById('answerInput').focus();
+
+            if (q.type === 'splitsen') {
+                document.getElementById('sumDisplay').textContent = `${q.total} = `;
+                document.getElementById('answerInput').style.display = 'none';
+                document.getElementById('splitsenInputs').style.display = 'flex';
+                document.getElementById('splitInput1').value = '';
+                document.getElementById('splitInput2').value = '';
+                document.getElementById('splitInput1').focus();
+                activeSplitInput = 'splitInput1';
+                document.querySelectorAll('.splitsen-input').forEach(el => el.classList.remove('active-split'));
+                document.getElementById('splitInput1').classList.add('active-split');
+            } else {
+                document.getElementById('sumDisplay').textContent = `${q.num1} ${q.operator} ${q.num2} = `;
+                document.getElementById('answerInput').style.display = '';
+                document.getElementById('splitsenInputs').style.display = 'none';
+                document.getElementById('answerInput').value = '';
+                document.getElementById('answerInput').focus();
+            }
+
             document.getElementById('feedback').textContent = '';
             document.getElementById('feedback').className = 'feedback';
             document.getElementById('currentQuestion').textContent = gameState.currentIndex + 1;
@@ -2722,19 +2889,37 @@
                 return;
             }
 
-            const input = document.getElementById('answerInput');
-            const userAnswer = parseInt(input.value);
-            const correctAnswer = gameState.questions[gameState.currentIndex].answer;
+            const q = gameState.questions[gameState.currentIndex];
             const feedback = document.getElementById('feedback');
             const flashcard = document.getElementById('flashcard');
 
-            if (isNaN(userAnswer)) {
-                feedback.textContent = '🤔 Vul een getal in!';
-                feedback.className = 'feedback';
-                return;
+            let isCorrect;
+
+            if (q.type === 'splitsen') {
+                const v1 = parseInt(document.getElementById('splitInput1').value);
+                const v2 = parseInt(document.getElementById('splitInput2').value);
+
+                if (isNaN(v1) || isNaN(v2)) {
+                    feedback.textContent = '🤔 Vul beide getallen in!';
+                    feedback.className = 'feedback';
+                    return;
+                }
+
+                isCorrect = (v1 + v2 === q.total) && v1 >= 0 && v2 >= 0;
+            } else {
+                const input = document.getElementById('answerInput');
+                const userAnswer = parseInt(input.value);
+
+                if (isNaN(userAnswer)) {
+                    feedback.textContent = '🤔 Vul een getal in!';
+                    feedback.className = 'feedback';
+                    return;
+                }
+
+                isCorrect = (userAnswer === q.answer);
             }
 
-            if (userAnswer === correctAnswer) {
+            if (isCorrect) {
                 // Correct answer!
                 gameState.answered = true;
                 gameState.correct++;
@@ -2747,7 +2932,7 @@
                 document.getElementById('correctScore').textContent = gameState.correct;
 
                 // Notify monitor
-                sendAnswerEvent(true, userAnswer, correctAnswer);
+                sendAnswerEvent(true, null, null);
                 sendStateToMonitor();
 
                 // Auto-advance to next question after short delay
@@ -2757,7 +2942,11 @@
             } else {
                 // Wrong answer - show help
                 gameState.incorrect++;
-                feedback.textContent = '😢 Helaas!';
+                if (q.type === 'splitsen') {
+                    feedback.textContent = `😢 Helaas! ${q.total} = ${q.part1} + ${q.part2}`;
+                } else {
+                    feedback.textContent = '😢 Helaas!';
+                }
                 feedback.className = 'feedback incorrect';
                 flashcard.classList.add('shake');
                 setTimeout(() => flashcard.classList.remove('shake'), 500);
@@ -2766,16 +2955,24 @@
                 document.getElementById('incorrectScore').textContent = gameState.incorrect;
 
                 // Notify monitor
-                sendAnswerEvent(false, userAnswer, correctAnswer);
+                sendAnswerEvent(false, null, null);
                 sendStateToMonitor();
 
-                // Show numberline automatically
-                showNumberlineForHelp();
+                if (q.type === 'splitsen') {
+                    // For splitsen, clear and let them try again or auto-advance
+                    gameState.answered = true;
+                    setTimeout(() => {
+                        nextQuestion();
+                    }, 2000);
+                } else {
+                    // Show numberline automatically
+                    showNumberlineForHelp();
 
-                // Show operator question - student must answer before retry
-                setTimeout(() => {
-                    showOperatorQuestion();
-                }, 600);
+                    // Show operator question - student must answer before retry
+                    setTimeout(() => {
+                        showOperatorQuestion();
+                    }, 600);
+                }
             }
         }
 
