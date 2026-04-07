@@ -2777,14 +2777,10 @@
                     // "4 = ? + 3"
                     document.getElementById('sumDisplay').innerHTML = `${q.total} = <span style="color:rgba(255,255,255,0.5)">?</span> + ${q.givenPart}`;
                 }
-                document.getElementById('answerInput').style.display = '';
-                document.getElementById('splitsenInputs').style.display = 'none';
                 document.getElementById('answerInput').value = '';
                 document.getElementById('answerInput').focus();
             } else {
                 document.getElementById('sumDisplay').textContent = `${q.num1} ${q.operator} ${q.num2} = `;
-                document.getElementById('answerInput').style.display = '';
-                document.getElementById('splitsenInputs').style.display = 'none';
                 document.getElementById('answerInput').value = '';
                 document.getElementById('answerInput').focus();
             }
