@@ -243,21 +243,6 @@
             box-shadow: 0 0 20px rgba(255,255,255,0.8);
         }
 
-        .splitsen-inputs {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .splitsen-input {
-            width: 80px;
-            font-size: 2rem;
-        }
-
-        .splitsen-input.active-split {
-            box-shadow: 0 0 20px rgba(255,255,255,0.8);
-            border-color: #38ef7d;
-        }
 
         /* Feedback */
         .feedback {
@@ -1686,10 +1671,15 @@
 
                 <div id="splitsenSettings" style="display: none;">
                     <div class="setting-group">
-                        <label class="setting-label">📊 Splitsen tot en met:</label>
-                        <div class="button-group" id="splitsenRangeButtons">
-                            <button class="option-btn selected" data-splitrange="5">5</button>
-                            <button class="option-btn" data-splitrange="10">10</button>
+                        <label class="setting-label">✂️ Welk getal wil je splitsen?</label>
+                        <div class="button-group" id="splitsenNumberButtons">
+                            <button class="option-btn" data-splitnumber="4">4</button>
+                            <button class="option-btn selected" data-splitnumber="5">5</button>
+                            <button class="option-btn" data-splitnumber="6">6</button>
+                            <button class="option-btn" data-splitnumber="7">7</button>
+                            <button class="option-btn" data-splitnumber="8">8</button>
+                            <button class="option-btn" data-splitnumber="9">9</button>
+                            <button class="option-btn" data-splitnumber="10">10</button>
                         </div>
                     </div>
                 </div>
@@ -1743,11 +1733,6 @@
                     </div>
                     <div class="sum" id="sumDisplay">5 + 3 = </div>
                     <input type="number" class="answer-input" id="answerInput" autofocus>
-                    <div class="splitsen-inputs" id="splitsenInputs" style="display: none;">
-                        <input type="number" class="answer-input splitsen-input" id="splitInput1" placeholder="?">
-                        <span class="sum" style="margin: 0 5px; font-size: 2rem;">+</span>
-                        <input type="number" class="answer-input splitsen-input" id="splitInput2" placeholder="?">
-                    </div>
                 <div class="helper-buttons">
                     <button class="helper-btn" id="numberlineBtn" onclick="toggleNumberline()">📏 Getallenlijn</button>
                     <button class="helper-btn" id="abacusBtn" onclick="toggleAbacus()">🧮 Telraam</button>
@@ -1850,7 +1835,7 @@
             level: 1,
             count: 10,
             mode: 'rekenen',
-            splitRange: 5
+            splitNumber: 5
         };
 
         let gameState = {
@@ -2021,38 +2006,6 @@
             document.getElementById('rekenenSettings').style.display = mode === 'rekenen' ? '' : 'none';
             document.getElementById('splitsenSettings').style.display = mode === 'splitsen' ? '' : 'none';
         });
-
-        // Handle Enter key for splitsen inputs
-        ['splitInput1', 'splitInput2'].forEach(id => {
-            document.getElementById(id).addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !waitingForOperator) {
-                    if (!gameState.answered) {
-                        checkAnswer();
-                    } else {
-                        nextQuestion();
-                    }
-                }
-            });
-            document.getElementById(id).addEventListener('focus', () => {
-                activeSplitInput = id;
-                document.querySelectorAll('.splitsen-input').forEach(el => el.classList.remove('active-split'));
-                document.getElementById(id).classList.add('active-split');
-            });
-            document.getElementById(id).addEventListener('input', () => {
-                if (gameState.answered || waitingForOperator) return;
-                const v1 = document.getElementById('splitInput1').value;
-                const v2 = document.getElementById('splitInput2').value;
-                if (v1 !== '' && v2 !== '') {
-                    setTimeout(() => {
-                        if (!gameState.answered && !waitingForOperator) {
-                            checkAnswer();
-                        }
-                    }, 300);
-                }
-            });
-        });
-
-        let activeSplitInput = 'splitInput1';
 
         // Handle Enter key
         document.getElementById('answerInput').addEventListener('keypress', (e) => {
@@ -2515,15 +2468,7 @@
         function keypadInput(num) {
             if (gameState.answered || waitingForOperator) return;
 
-            const q = gameState.questions[gameState.currentIndex];
-            let input;
-
-            if (q && q.type === 'splitsen') {
-                input = document.getElementById(activeSplitInput);
-            } else {
-                input = document.getElementById('answerInput');
-            }
-
+            const input = document.getElementById('answerInput');
             const currentValue = input.value;
 
             // If num is 10, just set the value to 10
@@ -2536,25 +2481,10 @@
 
             // Trigger input event for auto-check
             input.dispatchEvent(new Event('input'));
-
-            // For splitsen: auto-move to second input after filling first
-            if (q && q.type === 'splitsen' && activeSplitInput === 'splitInput1' && input.value !== '') {
-                activeSplitInput = 'splitInput2';
-                document.querySelectorAll('.splitsen-input').forEach(el => el.classList.remove('active-split'));
-                document.getElementById('splitInput2').classList.add('active-split');
-                document.getElementById('splitInput2').focus();
-            }
         }
 
         function keypadClear() {
-            const q = gameState.questions && gameState.questions[gameState.currentIndex];
-            let input;
-
-            if (q && q.type === 'splitsen') {
-                input = document.getElementById(activeSplitInput);
-            } else {
-                input = document.getElementById('answerInput');
-            }
+            const input = document.getElementById('answerInput');
             // Remove last character
             input.value = input.value.slice(0, -1);
         }
@@ -2705,8 +2635,8 @@
                 settings.range = parseInt(rangeBtn.dataset.range);
                 settings.level = levelBtn.dataset.level === 'mix' ? 'mix' : parseInt(levelBtn.dataset.level);
             } else {
-                const splitBtn = document.querySelector('#splitsenRangeButtons .selected');
-                settings.splitRange = parseInt(splitBtn.dataset.splitrange);
+                const splitBtn = document.querySelector('#splitsenNumberButtons .selected');
+                settings.splitNumber = parseInt(splitBtn.dataset.splitnumber);
             }
         }
 
@@ -2752,28 +2682,39 @@
 
         function generateSplitsenQuestions() {
             const questions = [];
-            // Genereer alle mogelijke splitsingen voor getallen 2 t/m splitRange
+            const total = settings.splitNumber;
+
+            // Genereer alle mogelijke splitsingen voor het gekozen getal
+            // Bijv. voor 4: (0+4), (1+3), (2+2), (3+1), (4+0)
             const allSplits = [];
-            for (let total = 2; total <= settings.splitRange; total++) {
-                for (let a = 0; a <= total; a++) {
-                    allSplits.push({ total: total, part1: a, part2: total - a });
-                }
+            for (let a = 0; a <= total; a++) {
+                const b = total - a;
+                // Vraag naar het tweede deel: "4 = a + ?"
+                allSplits.push({
+                    type: 'splitsen',
+                    total: total,
+                    givenPart: a,
+                    answer: b,
+                    givenPosition: 'left'  // getal staat links: "4 = 3 + ?"
+                });
+                // Vraag naar het eerste deel: "4 = ? + b"
+                allSplits.push({
+                    type: 'splitsen',
+                    total: total,
+                    givenPart: b,
+                    answer: a,
+                    givenPosition: 'right'  // getal staat rechts: "4 = ? + 3"
+                });
             }
 
-            // Shuffle en selecteer het gewenste aantal
+            // Shuffle
             for (let i = allSplits.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [allSplits[i], allSplits[j]] = [allSplits[j], allSplits[i]];
             }
 
             for (let i = 0; i < settings.count; i++) {
-                const split = allSplits[i % allSplits.length];
-                questions.push({
-                    type: 'splitsen',
-                    total: split.total,
-                    part1: split.part1,
-                    part2: split.part2
-                });
+                questions.push(allSplits[i % allSplits.length]);
             }
 
             return questions;
@@ -2829,15 +2770,17 @@
             const q = gameState.questions[gameState.currentIndex];
 
             if (q.type === 'splitsen') {
-                document.getElementById('sumDisplay').textContent = `${q.total} = `;
-                document.getElementById('answerInput').style.display = 'none';
-                document.getElementById('splitsenInputs').style.display = 'flex';
-                document.getElementById('splitInput1').value = '';
-                document.getElementById('splitInput2').value = '';
-                document.getElementById('splitInput1').focus();
-                activeSplitInput = 'splitInput1';
-                document.querySelectorAll('.splitsen-input').forEach(el => el.classList.remove('active-split'));
-                document.getElementById('splitInput1').classList.add('active-split');
+                if (q.givenPosition === 'left') {
+                    // "4 = 3 + ?"
+                    document.getElementById('sumDisplay').textContent = `${q.total} = ${q.givenPart} + `;
+                } else {
+                    // "4 = ? + 3"
+                    document.getElementById('sumDisplay').innerHTML = `${q.total} = <span style="color:rgba(255,255,255,0.5)">?</span> + ${q.givenPart}`;
+                }
+                document.getElementById('answerInput').style.display = '';
+                document.getElementById('splitsenInputs').style.display = 'none';
+                document.getElementById('answerInput').value = '';
+                document.getElementById('answerInput').focus();
             } else {
                 document.getElementById('sumDisplay').textContent = `${q.num1} ${q.operator} ${q.num2} = `;
                 document.getElementById('answerInput').style.display = '';
@@ -2893,31 +2836,17 @@
             const feedback = document.getElementById('feedback');
             const flashcard = document.getElementById('flashcard');
 
-            let isCorrect;
+            const input = document.getElementById('answerInput');
+            const userAnswer = parseInt(input.value);
 
-            if (q.type === 'splitsen') {
-                const v1 = parseInt(document.getElementById('splitInput1').value);
-                const v2 = parseInt(document.getElementById('splitInput2').value);
-
-                if (isNaN(v1) || isNaN(v2)) {
-                    feedback.textContent = '🤔 Vul beide getallen in!';
-                    feedback.className = 'feedback';
-                    return;
-                }
-
-                isCorrect = (v1 + v2 === q.total) && v1 >= 0 && v2 >= 0;
-            } else {
-                const input = document.getElementById('answerInput');
-                const userAnswer = parseInt(input.value);
-
-                if (isNaN(userAnswer)) {
-                    feedback.textContent = '🤔 Vul een getal in!';
-                    feedback.className = 'feedback';
-                    return;
-                }
-
-                isCorrect = (userAnswer === q.answer);
+            if (isNaN(userAnswer)) {
+                feedback.textContent = '🤔 Vul een getal in!';
+                feedback.className = 'feedback';
+                return;
             }
+
+            const correctAnswer = q.type === 'splitsen' ? q.answer : q.answer;
+            const isCorrect = (userAnswer === correctAnswer);
 
             if (isCorrect) {
                 // Correct answer!
@@ -2943,7 +2872,11 @@
                 // Wrong answer - show help
                 gameState.incorrect++;
                 if (q.type === 'splitsen') {
-                    feedback.textContent = `😢 Helaas! ${q.total} = ${q.part1} + ${q.part2}`;
+                    if (q.givenPosition === 'left') {
+                        feedback.textContent = `😢 Helaas! ${q.total} = ${q.givenPart} + ${q.answer}`;
+                    } else {
+                        feedback.textContent = `😢 Helaas! ${q.total} = ${q.answer} + ${q.givenPart}`;
+                    }
                 } else {
                     feedback.textContent = '😢 Helaas!';
                 }
