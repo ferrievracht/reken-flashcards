@@ -1684,6 +1684,7 @@
             .progress-container { height: 10px; margin-bottom: 8px; }
 
             .flashcard-wrapper { gap: 14px; margin: 8px 0; }
+            .flashcard-wrapper .flashcard { min-width: 0; }
             .flashcard { padding: 18px 22px; border-radius: 16px; }
             .sum { font-size: 2.8rem; margin-bottom: 12px; }
             .answer-input { font-size: 2.4rem; width: 100px; padding: 8px; border-radius: 10px; }
@@ -1691,14 +1692,15 @@
             .helper-buttons { margin-top: 10px; gap: 8px; }
             .helper-btn { padding: 7px 14px; font-size: 0.85rem; border-radius: 14px; }
 
-            /* Keypad: 4 kolommen, grote knoppen voor goede schermvulling */
+            /* Keypad: 4 kolommen, knoppen 72px zodat alles binnen 976px past */
             .number-keypad {
                 grid-template-columns: repeat(4, 1fr);
                 padding: 14px;
                 gap: 10px;
                 border-radius: 18px;
+                flex-shrink: 0;
             }
-            .keypad-btn { width: 88px; height: 88px; font-size: 1.8rem; border-radius: 14px; }
+            .keypad-btn { width: 72px; height: 72px; font-size: 1.6rem; border-radius: 14px; }
 
             .feedback { font-size: 1.15rem; min-height: 28px; margin: 6px 0; }
             .nav-btn { padding: 11px 24px; font-size: 0.98rem; }
