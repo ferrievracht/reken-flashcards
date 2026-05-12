@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>Fumoku — Flashcards</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
@@ -21,21 +21,29 @@
     --green-light: #a8c4a0;
     --shadow: rgba(44, 36, 22, 0.08);
     --card-w: min(480px, 88vw);
-    --card-h: min(320px, 56vw);
+    --card-h: min(320px, 52vh);
   }
 
-  html { font-size: 16px; }
+  html {
+    font-size: 16px;
+    height: 100%;
+  }
 
   body {
     font-family: 'DM Mono', monospace;
     background: var(--paper);
     color: var(--ink);
-    min-height: 100dvh;
+    height: 100dvh;
+    max-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-x: hidden;
+    overflow: hidden;
     position: relative;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 
   /* Paper texture overlay */
@@ -653,13 +661,49 @@
     background: var(--paper-dark);
   }
 
-  /* ── Responsive ── */
+  /* ── Touch optimalisatie ── */
+  button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+  /* ── Kleine schermen (telefoon) ── */
   @media (max-width: 480px) {
     header { padding: 1.5rem 1rem 0.75rem; }
     .progress-area, .nav-area { padding-left: 1rem; padding-right: 1rem; }
     .keyboard-hints { display: none; }
     .card-actions { gap: 0.6rem; }
     .btn-action { padding: 0 1rem; font-size: 0.65rem; height: 40px; }
+  }
+
+  /* ── iPad portrait: meer ruimte voor kaart ── */
+  @media (orientation: portrait) and (min-width: 768px) {
+    :root {
+      --card-w: min(520px, 80vw);
+      --card-h: min(340px, 42vh);
+    }
+    header { padding: 2rem 2rem 0.75rem; }
+    .progress-area, .nav-area { padding-left: 2rem; padding-right: 2rem; }
+    .card-area { padding: 1.5rem 1rem; }
+    .btn-action { height: 48px; font-size: 0.78rem; padding: 0 1.75rem; }
+    .btn-icon { width: 42px; height: 42px; }
+    .keyboard-hints { display: none; }
+  }
+
+  /* ── iPad landscape: compact zodat alles zichtbaar is ── */
+  @media (orientation: landscape) and (min-width: 768px) {
+    :root {
+      --card-w: min(440px, 52vw);
+      --card-h: min(240px, 46vh);
+    }
+    header { padding: 0.75rem 1.5rem 0.5rem; }
+    .progress-area { padding: 0 1.5rem; }
+    .nav-area { padding: 0 1.5rem 0.6rem; }
+    .card-area { padding: 0.5rem 1rem; }
+    .card-label { margin-bottom: 0.6rem; }
+    .card-content { font-size: clamp(1rem, 2.8vw, 1.5rem); }
+    .btn-action { height: 40px; font-size: 0.68rem; padding: 0 1.1rem; }
+    .card-actions { margin-bottom: 0.6rem; }
+    .keyboard-hints { display: none; }
+    .logo { font-size: 1.4rem; }
+    .progress-text { font-size: 0.65rem; margin-top: 0.3rem; }
   }
 </style>
 </head>
